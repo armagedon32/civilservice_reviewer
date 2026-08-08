@@ -1,0 +1,14 @@
+{
+  "name": "ddi-reviewer",
+  "version": "1.0.0",
+  "description": "Online Civil Service Reviewer Web App Prototype",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "pg": "^8.22.0"
+  }
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mastery Review PH — Civil Service Reviewer</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+        <circle cx="20" cy="20" r="18" fill="#2b5cb8" />
+        <path d="M20 6 L34 30 H6 Z" fill="#ffffff" opacity="0.92" />
+        <path d="M20 14 L27 29 H13 Z" fill="#f5b93a" />
+        <rect x="17.2" y="5" width="5.6" height="4" rx="1" fill="#f5b93a" />
+      </svg>
+      <span class="brand-text">Mastery <span>Review PH</span></span>
+    </div>
+    <nav class="auth-nav">
+      <span id="userBadge" class="user-badge hidden"></span>
+      <button id="adminBtn" class="btn-ghost">⚙ Admin</button>
+      <button id="logoutBtn" class="btn-ghost hidden">Logout</button>
+      <button id="loginBtn" class="btn-primary">Login / Sign up</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="view-home" class="view">
+      <div class="hero">
+        <h1>Pumasa sa Civil Service Exam.<br />Isang hakbang sa isang pagkakataon.</h1>
+        <p class="lead">Libreng practice tests na may instant score para sa Civil Service Professional. Mag-subscribe para ma-unlock ang lahat ng premium tests.</p>
+        <div class="hero-badges">
+          <span>✅ Instant auto-scoring</span>
+          <span>📊 70% passing target</span>
+          <span>📱 Gumagana sa mobile</span>
+        </div>
+      </div>
+
+      <div id="planBanner" class="plan-banner"></div>
+      <div class="progress-entry" id="progressEntry">
+        <button id="viewProgressBtn" class="btn-ghost">📈 Tingnan ang aking progress</button>
+      </div>
+      <h2 class="section-title">Practice Tests</h2>
+      <div id="testList" class="test-grid"></div>
+    </section>
+
+    <section id="view-test" class="view hidden">
+      <button id="backBtn" class="btn-ghost">← Bumalik</button>
+      <h2 id="testTitle"></h2>
+      <div id="quizArea"></div>
+    </section>
+
+    <section id="view-result" class="view hidden">
+      <div class="result-card">
+        <h2>Resulta</h2>
+        <div id="resultBody"></div>
+        <button id="resultBackBtn" class="btn-primary">Bumalik sa listahan</button>
+      </div>
+    </section>
+
+    <section id="view-progress" class="view hidden">
+      <button id="progressBackBtn" class="btn-ghost">← Bumalik</button>
+      <h2 class="section-title">Aking Progress</h2>
+      <div id="progressSummary" class="progress-summary"></div>
+      <div id="progressBody" class="progress-body"></div>
+    </section>
+
+    <section id="view-subscribe" class="view hidden">
+      <div class="subscribe-card">
+        <h2>I-unlock ang Premium</h2>
+        <p>May bayad na access sa lahat ng premium practice tests, detalyn mga paliwanag, at bagong tests bawat buwan.</p>
+        <p class="price" id="subPrice">PHP 300 <span>/ buwan</span></p>
+
+        <div class="gcash-box">
+          <div class="gcash-header">💚 Mag-bayad sa GCash</div>
+          <ol class="gcash-steps">
+            <li>Buksan ang GCash app → <strong>Magbayad</strong></li>
+            <li>Ilagay ang numero: <strong id="gcashNumber" class="highlight">09171234567</strong></li>
+            <li>Magbayad ng eksaktong halagang <strong id="gcashAmount">₱300</strong></li>
+            <li>Kopyahin ang <strong>reference number</strong> na maki pakita pagkatapos</li>
+          </ol>
+        </div>
+
+        <form id="paymentForm" class="payment-form">
+          <label>GCash Reference Number</label>
+          <input id="paymentReference" type="text" required placeholder="Hal. 12345678900xxxx" />
+          <label>Nota (opsyonal)</label>
+          <input id="paymentNote" type="text" placeholder="Email o pangalan mo" />
+          <p id="paymentMsg" class="error hidden"></p>
+          <button type="submit" class="btn-primary btn-big">Naibayaran ko na — i-submit</button>
+        </form>
+
+        <p class="note">Pagkatapos mong isumite, iveri-fication ng admin ang iyong bayad (karaniwan ay <strong>&lt; 24 oras</strong>). Kapag approved, makakakuha ka ng <strong id="subDays">30 araw</strong> na subscription. Pagkatapos ng 30 araw, mag-e-expire ang access at kailangan mong magbayad muli.</p>
+        <button id="myPaymentsBtn" class="btn-ghost">Tingnan ang aking mga bayad</button>
+        <button id="subCancelBtn" class="btn-ghost">Kanselahin</button>
+      </div>
+    </section>
+
+    <section id="view-mypayments" class="view hidden">
+      <button id="mypayBackBtn" class="btn-ghost">← Bumalik</button>
+      <h2 class="section-title">Aking mga Pagbabayad</h2>
+      <div id="mypayList" class="history-list"></div>
+    </section>
+
+    <section id="view-auth" class="view hidden">
+      <div class="auth-card">
+        <h2 id="authTitle">Mag-login</h2>
+        <form id="authForm">
+          <label>Email</label>
+          <input id="authEmail" type="email" required placeholder="hal. juan@email.com" />
+          <label>Password</label>
+          <input id="authPassword" type="password" required minlength="6" placeholder="Hindi bababa sa 6 na karakter" />
+          <p id="authError" class="error hidden"></p>
+          <button type="submit" class="btn-primary btn-big">Magpatuloy</button>
+        </form>
+        <p class="switch-line">Wala ka pang account? <a href="#" id="toggleAuth">Mag-sign up</a></p>
+        <button id="authCancelBtn" class="btn-ghost">Kanselahin</button>
+      </div>
+    </section>
+
+    <section id="view-admin" class="view hidden">
+      <button id="adminBackBtn" class="btn-ghost">← Bumalik</button>
+      <div id="adminGate" class="auth-card admin-gate">
+        <h2>Admin Access</h2>
+        <p class="note">Maglagay ng admin key para makita ang dashboard.</p>
+        <div class="admin-gate-row">
+          <input id="adminKeyInput" type="password" placeholder="Admin key" />
+          <button id="adminUnlockBtn" class="btn-primary">I-unlock</button>
+        </div>
+        <p id="adminGateError" class="error hidden"></p>
+      </div>
+
+      <div id="adminDashboard" class="hidden">
+        <h2 class="section-title">Dashboard — Mga Pagbabayad</h2>
+        <div id="adminPaySummary"></div>
+        <div id="adminPaymentsList" class="history-list"></div>
+
+        <h3 class="review-title">Dashboard — Mga User</h3>
+        <div id="adminSummary" class="stat-grid"></div>
+
+        <h3 class="review-title">Listahan ng Users</h3>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Plan</th>
+                <th>Subok</th>
+                <th>Highest</th>
+                <th>Avg</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Mastery Review PH &copy; 2026 · Libreng practice tests para sa mas maraming pumasa.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
