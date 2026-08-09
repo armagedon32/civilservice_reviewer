@@ -30,7 +30,7 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_KEY = process.env.ADMIN_KEY || 'masterypass2026';
 const SUBSCRIPTION_DAYS = 30;
 const PRICE_PHP = 300;
-const GCASH_NUMBER = process.env.GCASH_NUMBER || '09171234567'; // PALITAN mo ito ng sarili mong GCash number!
+const GCASH_NUMBER = process.env.GCASH_NUMBER || '09158907953'; // PALITAN mo ito ng sarili mong GCash number!
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@mastery.ph';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'adminpass123';
 const SEED_DEMOS = process.env.SEED_DEMOS !== 'false'; // i-off ang demo users sa production kung ayaw mo
