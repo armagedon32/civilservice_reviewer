@@ -229,9 +229,14 @@ app.post('/api/tests/:id/score', async (req, res) => {
   }
   const answers = req.body?.answers || [];
   let correct = 0;
+  const topicStats = {};
   const results = attempt.questions.map((q, i) => {
     const ok = answers[i] === q.answer;
     if (ok) correct++;
+    const topic = q.topic || 'Pangkalahatan';
+    topicStats[topic] = topicStats[topic] || { correct: 0, total: 0 };
+    topicStats[topic].total++;
+    if (ok) topicStats[topic].correct++;
     return {
       questionIndex: i,
       correct: ok,
@@ -243,7 +248,7 @@ app.post('/api/tests/:id/score', async (req, res) => {
   });
   const total = attempt.questions.length;
   const score = Math.round((correct / total) * 100);
-  await recordScore(user.id, t.id, correct, total, score);
+  await recordScore(user.id, t.id, correct, total, score, topicStats);
   attempts.delete(attemptId);
   res.json({
     testId: t.id,
@@ -260,6 +265,35 @@ app.get('/api/progress', async (req, res) => {
   const user = await currentUser(req);
   if (!user) return res.status(401).json({ error: 'Mag-login muna.' });
   const history = await getHistory(user.id);
+
+  // I-aggregate ang per-subject na performance mula sa mga nakalap na attempt
+  const topicAgg = {};
+  for (const h of history) {
+    if (!h.topics || typeof h.topics !== 'object') continue;
+    for (const [topic, v] of Object.entries(h.topics)) {
+      topicAgg[topic] = topicAgg[topic] || { correct: 0, total: 0 };
+      topicAgg[topic].correct += v.correct;
+      topicAgg[topic].total += v.total;
+    }
+  }
+  const subjects = Object.entries(topicAgg)
+    .map(([topic, v]) => ({
+      topic,
+      correct: v.correct,
+      total: v.total,
+      pct: Math.round((v.correct / v.total) * 100),
+    }))
+    .sort((a, b) => a.pct - b.pct);
+
+  // Recommended topic: kung saan mababa ang performance (< 70% pumasa)
+  const recommendations = subjects
+    .filter((s) => s.pct < 70)
+    .map((s) => ({
+      topic: s.topic,
+      pct: s.pct,
+      suggestion: `Mababa ang iyong iskor sa ${s.topic.toLowerCase()} (${s.pct}%). Mag-extra practice sa mga tanong tungkol sa ${s.topic.toLowerCase()} at pag-aral ang mga paliwanag.`,
+    }));
+
   const summary = history.length
     ? {
         attempts: history.length,
@@ -268,7 +302,8 @@ app.get('/api/progress', async (req, res) => {
         avg: Math.round(history.reduce((s, h) => s + h.score, 0) / history.length),
       }
     : { attempts: 0, best: 0, last: 0, avg: 0 };
-  res.json({ history, summary });
+
+  res.json({ history, summary, subjects, recommendations });
 });
 
 // ADMIN AUTH: tanggap ang admin key (header o ?key=) O isang naka-login na user na isAdmin

@@ -44,6 +44,10 @@ function normalizePayment(p) {
 }
 
 function normalizeHistoryRow(h) {
+  let topics = h.topics;
+  if (typeof topics === 'string') {
+    try { topics = JSON.parse(topics); } catch { topics = null; }
+  }
   return {
     testId: h.testId,
     correct: h.correct,
@@ -51,6 +55,7 @@ function normalizeHistoryRow(h) {
     score: h.score,
     passed: h.score >= 70,
     at: h.at,
+    topics,
   };
 }
 
@@ -107,8 +112,12 @@ const PG = {
         correct INTEGER NOT NULL,
         total INTEGER NOT NULL,
         score INTEGER NOT NULL,
+        topics TEXT,
         created_at TEXT NOT NULL
       );
+    `);
+    await dbPool.query(`
+      ALTER TABLE history ADD COLUMN IF NOT EXISTS topics TEXT;
     `);
   },
   async findUserByEmail(email) {
@@ -182,19 +191,20 @@ const PG = {
   },
   async getHistory(userId) {
     const r = await dbPool.query(
-      `SELECT test_id, correct, total, score, created_at FROM history WHERE user_id=$1 ORDER BY created_at ASC`,
+      `SELECT test_id, correct, total, score, topics, created_at FROM history WHERE user_id=$1 ORDER BY created_at ASC`,
       [userId]
     );
     return r.rows.map((h) => normalizeHistoryRow({
       testId: h.test_id, correct: h.correct, total: h.total,
-      score: h.score, at: h.created_at,
+      score: h.score, topics: h.topics, at: h.created_at,
     }));
   },
-  async recordScore(userId, testId, correct, total, score) {
+  async recordScore(userId, testId, correct, total, score, topics) {
     await dbPool.query(
-      `INSERT INTO history (id, user_id, test_id, correct, total, score, created_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [newId(), userId, testId, correct, total, score, new Date().toISOString()]
+      `INSERT INTO history (id, user_id, test_id, correct, total, score, topics, created_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [newId(), userId, testId, correct, total, score,
+       topics ? JSON.stringify(topics) : null, new Date().toISOString()]
     );
     return this.getHistory(userId);
   },
@@ -206,7 +216,7 @@ const PG = {
       byUser[row.user_id] = byUser[row.user_id] || [];
       byUser[row.user_id].push(normalizeHistoryRow({
         testId: row.test_id, correct: row.correct, total: row.total,
-        score: row.score, at: row.created_at,
+        score: row.score, topics: row.topics, at: row.created_at,
       }));
     }
     return u.rows.map((row) => {
@@ -361,13 +371,14 @@ const FILE = {
     const user = getFileStore().users.find((x) => x.id === userId);
     return (user && user.history || []).map(normalizeHistoryRow);
   },
-  async recordScore(userId, testId, correct, total, score) {
+  async recordScore(userId, testId, correct, total, score, topics) {
     const user = getFileStore().users.find((x) => x.id === userId);
     if (!user) return null;
     user.history = user.history || [];
     user.history.push({
       testId, correct, total, score,
       passed: score >= 70,
+      topics: topics || null,
       at: new Date().toISOString(),
     });
     saveFileStore();
@@ -450,8 +461,8 @@ export async function revokeSubscription(userId) {
 export async function getHistory(userId) {
   return impl.getHistory(userId);
 }
-export async function recordScore(userId, testId, correct, total, score) {
-  return impl.recordHistory ? impl.recordHistory(userId, testId, correct, total, score) : impl.recordScore(userId, testId, correct, total, score);
+export async function recordScore(userId, testId, correct, total, score, topics) {
+  return impl.recordHistory ? impl.recordHistory(userId, testId, correct, total, score, topics) : impl.recordScore(userId, testId, correct, total, score, topics);
 }
 export async function getAllUsers() {
   return impl.getAllUsers();

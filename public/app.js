@@ -354,8 +354,52 @@ async function loadProgress() {
         </div>
       ` : '<p>Wala ka pang sagot. Mag-take ng practice test para makita ang iyong progress.</p>'}
     `;
+
+    let bodyHtml = '';
+    if (s.attempts > 0) {
+      // ===== Performance bar graph per subject =====
+      const subjects = data.subjects || [];
+      if (subjects.length) {
+        const bars = subjects.map((sb) => {
+          const color = sb.pct >= 70 ? '#1f7a3d' : (sb.pct >= 50 ? '#e0a11a' : '#b03a3a');
+          const icon = sb.topic === 'Verbal' ? '📖' : sb.topic === 'Numerical' ? '🔢' : sb.topic === 'Clerical' ? '🗂️' : '🧠';
+          return `
+            <div class="bar-row">
+              <div class="bar-label">${icon} ${sb.topic} <span class="bar-pct">${sb.pct}%</span></div>
+              <div class="bar-track"><div class="bar-fill" style="width:${Math.max(sb.pct, 2)}%;background:${color}"></div></div>
+              <div class="bar-meta">${sb.correct}/${sb.total}</div>
+            </div>`;
+        }).join('');
+        bodyHtml += `
+          <div class="progress-chart">
+            <h3 class="review-title">Performance Level bawat Subject</h3>
+            <div class="bar-list">${bars}</div>
+          </div>`;
+      }
+      // ===== Recommendation =====
+      const recs = data.recommendations || [];
+      if (recs.length) {
+        const items = recs.map((r) => `
+            <div class="rec-row">
+              <span class="rec-icon">🎯</span>
+              <div>${r.suggestion}</div>
+            </div>`).join('');
+        bodyHtml += `
+          <div class="report-recs">
+            <h3 class="review-title">📌 Recommended Topics na Dapat I-Review</h3>
+            ${items}
+          </div>`;
+      } else {
+        bodyHtml += `
+          <div class="report-recs">
+            <h3 class="review-title">✅ Mahusay ang performance mo!</h3>
+            <p>Wala kang topic na kailangang i-review ng malalim. Panatilihin ang magandang daloy ng pag-review.</p>
+          </div>`;
+      }
+    }
+    $('#progressBody').innerHTML = bodyHtml;
     if (data.history.length) {
-      const rows = data.history.reverse().map((h) => `
+      const rows = data.history.slice().reverse().map((h) => `
         <div class="history-row">
           <div class="history-score ${h.passed ? 'pass' : 'fail'}">${h.score}%</div>
           <div class="history-info">
@@ -364,9 +408,7 @@ async function loadProgress() {
           </div>
         </div>
       `).join('');
-      $('#progressBody').innerHTML = `<h3 class="review-title">Kasaysayan</h3>${rows}`;
-    } else {
-      $('#progressBody').innerHTML = '';
+      $('#progressBody').innerHTML += `<h3 class="review-title">Kasaysayan</h3><div class="history-list">${rows}</div>`;
     }
     show('#view-progress');
   } catch (err) {

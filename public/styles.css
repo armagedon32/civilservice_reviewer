@@ -490,6 +490,46 @@ main {
 /* Progress */
 .progress-entry { margin-bottom: 22px; }
 .progress-summary { margin-bottom: 6px; }
+.progress-chart { margin: 20px 0 10px; }
+.bar-list { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 18px; }
+.bar-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 44px;
+  gap: 10px;
+  align-items: center;
+}
+.bar-label { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-pct { color: var(--primary); }
+.bar-track {
+  background: #eef3fc;
+  border-radius: 8px;
+  height: 18px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.5s ease;
+  min-width: 4px;
+}
+.bar-meta { color: var(--muted); font-size: 0.8rem; text-align: right; }
+
+.report-recs {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 14px 0;
+}
+.rec-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.rec-row:last-child { border-bottom: none; }
+.rec-icon { font-size: 1.1rem; }
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
