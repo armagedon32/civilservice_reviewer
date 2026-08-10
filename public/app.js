@@ -362,7 +362,7 @@ async function loadProgress() {
       if (subjects.length) {
         const bars = subjects.map((sb) => {
           const color = sb.pct >= 70 ? '#1f7a3d' : (sb.pct >= 50 ? '#e0a11a' : '#b03a3a');
-          const icon = sb.topic === 'Verbal' ? '📖' : sb.topic === 'Numerical' ? '🔢' : sb.topic === 'Clerical' ? '🗂️' : '🧠';
+          const icon = sb.topic === 'Verbal' ? '📖' : sb.topic === 'Numerical' ? '🔢' : sb.topic === 'Clerical' ? '🗂️' : sb.topic === 'General Info' ? '🏛️' : '🧠';
           return `
             <div class="bar-row">
               <div class="bar-label">${icon} ${sb.topic} <span class="bar-pct">${sb.pct}%</span></div>
