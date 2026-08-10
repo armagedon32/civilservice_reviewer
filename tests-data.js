@@ -2,6 +2,8 @@
 // Bawat test ay may `bank` (pool ng maraming tanong) at `sampleCount`.
 // Sa bawat subok, RANDOM na pipili ang server ng `sampleCount` tanong mula sa bank.
 
+import { extraTest1, extraTest2, extraTest3, extraTest4 } from './questions-extra.js';
+
 export const tests = [
   {
     id: 1,
@@ -48,6 +50,7 @@ export const tests = [
       { q: 'Piliin ang tamang ispiling: "___"', options: ['Receive', 'Recieve', 'Receeve', 'Resieve'], answer: 0, topic: "Verbal", explanation: '"Receive" — "i before e" ay may pagbubukod pagkatapos ng "c."', icon: '🔤' },
       { q: 'Analogy: KUNG PEN : WRITE, ang SCISSORS : _____', options: ['Cut', 'Sew', 'Draw', 'Color'], answer: 0, topic: "Analytical", explanation: 'Ang pen ay ginagamit para magsulat; ang scissors ay para magcut.', icon: '✂️' },
       { q: 'Ang isang worker ay ₱120/oras at nagtrabaho 8 oras. Magkano ang kita?', options: ['₱860', '₱960', '₱960.50', '₱1,000'], answer: 1, topic: "Numerical", explanation: '120 × 8 = ₱960.', icon: '👷' },
+      ...extraTest1,
     ],
   },
   {
@@ -61,7 +64,7 @@ export const tests = [
       { q: 'Piliin ang tamang gramatika: "Each of the students ___ to submit their form."', options: ['need', 'needs', 'needing', 'were'], answer: 1, topic: "Verbal", explanation: '"Each" ay singular, kaya ang verb ay "needs."', icon: '✍️' },
       { q: 'Analogy: Kung DOCTOR : HOSPITAL, ang Lawyer : _____', options: ['Courthouse', 'Office', 'School', 'Library'], answer: 0, topic: "Analytical", explanation: 'Ang doktor ay gumagawa sa ospital; ang lawyer sa korte (courthouse).', icon: '⚖️' },
       { q: 'Piliin ang salitang hindi kabilang:', options: ['Apple', 'Banana', 'Carrot', 'Mango'], answer: 2, topic: "Verbal", explanation: 'Ang apple, banana, mango ay prutas; ang carrot ay gulay.', icon: '🥕' },
-      { q: 'Piliin ang tamang spelling:', options: ['Environment', 'Enviroment', 'Enviornment', 'Environmant'], answer: 0, topic: "Verbal", explanation: '"Environment" ang tamang spelling.', icon: '🌍' },
+      { q: 'Ispeling: Alin ang tamang salita? — "Environment"', options: ['Environment', 'Enviroment', 'Enviornment', 'Environmant'], answer: 0, topic: "Verbal", explanation: '"Environment" ang tamang spelling.', icon: '🌍' },
       { q: 'Piliin ang synonym ng "Abundant".', options: ['Kulang', 'Sagana', 'Masarap', 'Matamlay'], answer: 1, topic: "Verbal", explanation: '"Abundant" = disana, labis o marami.', icon: '🌾' },
       { q: 'Anong panahunan: "She has been living here since 2019."', options: ['Simple past', 'Present perfect continuous', 'Past perfect', 'Future perfect'], answer: 1, topic: "Numerical", explanation: '"has been living" ay Present Perfect Continuous (aksyon na patuloy hanggang ngayon).', icon: '📚' },
       { q: 'Piliin ang mali sa pangungusap: "The teacher gave me this book the other day yesterday."', options: ['gave', 'this', 'the other day', 'yesterday'], answer: 3, topic: "Verbal", explanation: 'Ang "the other day" at "yesterday" ay REDUNDANT — isa lang ang dapat.', icon: '⚠️' },
@@ -88,11 +91,12 @@ export const tests = [
       { q: 'Ano ang average ng: 12, 14, 16, 18?', options: ['14', '15', '16', '17'], answer: 1, topic: "Verbal", explanation: 'Sum = 60 ÷ 4 = 15.', icon: '📊' },
       { q: 'I-round ang 9,876 sa pinakamalapit na libo:', options: ['9,000', '9,800', '10,000', '9,900'], answer: 2, topic: "Numerical", explanation: 'Ang daanan (8) ay ≥ 5, kaya i-round up: 10,000.', icon: '🔟' },
       { q: 'Piliin ang antonym ng "Victory".', options: ['Defeat', 'Win', 'Triumph', 'Success'], answer: 0, topic: "Verbal", explanation: 'Ang victory ay tagumpay; ang kasalungat ay defeat.', icon: '🏆' },
-      { q: 'Piliin ang tamang spelling:', options: ['Accommodation', 'Acomodation', 'Accomodation', 'Acommodation'], answer: 0, topic: "Verbal", explanation: '"Accommodation" — double c at double m.', icon: '🔤' },
+      { q: 'Ispeling: Alin ang tamang salita? — "Accommodation"', options: ['Accommodation', 'Acomodation', 'Accomodation', 'Acommodation'], answer: 0, topic: "Verbal", explanation: '"Accommodation" — double c at double m.', icon: '🔤' },
       { q: 'Kung ang isang ticket ay ₱80 at bumili ng 5, magkano?', options: ['₱300', '₱350', '₱400', '₱450'], answer: 2, topic: "Numerical", explanation: '80 × 5 = ₱400.', icon: '🎟️' },
       { q: 'Ano ang halaga ng: 2² + 3²?', options: ['10', '12', '13', '25'], answer: 2, topic: "Verbal", explanation: '4 + 9 = 13.', icon: '🧮' },
       { q: 'Piliin ang tamang salita: "If I ___ rich, I would travel."', options: ['am', 'was', 'were', 'be'], answer: 2, topic: "Verbal", explanation: 'Sa second conditional, ginagamit ang "were" para sa lahat ng subjects.', icon: '🎓' },
       { q: 'Analogy: KUNG PEN : INK, ang CAR : _____', options: ['Road', 'Gasoline', 'Wheel', 'Driver'], answer: 1, topic: "Analytical", explanation: 'Ang pen ay nangangailangan ng ink; ang car ay nangangailangan ng gasolina.', icon: '⛽' },
+      ...extraTest2,
     ],
   },
 {
@@ -129,6 +133,7 @@ export const tests = [
       { q: 'Ano ang susunod na numero: 5, 9, 13, 17, ____?', options: ['19', '21', '22', '25'], answer: 1, topic: "Numerical", explanation: 'Dagdagan ng +4 bawat numero: 17 + 4 = 21.', icon: '🔢' },
       { q: 'Kung ang ratio ng guro : mag-aaral ay 1 : 25, at may 75 mag-aaral, ilan ang guro?', options: ['2', '3', '4', '5'], answer: 1, topic: "Numerical", explanation: '75 ÷ 25 = 3 guro.', icon: '🍎' },
       { q: 'Kung ang isang sako ng bigas ay ₱1,800 at may 75% na diskwento, magkano ang babayaran?', options: ['₱350', '₱750', '₱450', '₱1,350'], answer: 2, topic: "Numerical", explanation: '1800 × 0.25 = ₱450 (25% na lang ang babayaran).', icon: '🌾' },
+      ...extraTest3,
     ],
   },
   {
@@ -164,6 +169,7 @@ export const tests = [
       { q: 'Identifying assumptions: Sa pahayag na "Kailangan ng budget para sa edukasyon" — ano ang ipinapalagay?', options: ['Lahat ay may pera', 'Mahalaga ang edukasyon', 'Walang gobyerno', 'Bawal ang bumoto'], answer: 1, topic: "Analytical", explanation: 'Ang pahayag ay ipinapalagay na mahalaga ang edukasyon upang bigyang-dahilan ang budget.', icon: '🎓' },
       { q: 'Data interpretation: Sa 200 respondents, 40% ang pumili ng "Bata". Ilan ang pumili ng "Pang-adulto"?', options: ['40', '100', '120', '140'], answer: 2, topic: "Analytical", explanation: 'Kung 40% ay Bata, ang 60% ay Pang-adulto: 200 × 0.60 = 120.', icon: '📊' },
       { q: 'Ano ang HINDI totoo tungkol sa rebolusyon?', options: ['Isang malaking pagbabago.', 'Maaaring mapayapa.', 'Laging marahas.', 'Nababago ang lipunan.'], answer: 2, topic: "Analytical", explanation: 'Ang rebolusyon ay hindi palaging marahas — maaaring mapayapa ang pagbabago.', icon: '🌐' },
+      ...extraTest4,
     ],
   },
 ];
