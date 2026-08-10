@@ -21,6 +21,7 @@ import {
   getAllPayments,
   setPaymentStatus,
   getPendingPaymentsCount,
+  getStoreMode,
 } from './store.js';
 import { tests } from './tests-data.js';
 
@@ -449,7 +450,7 @@ app.get('/api/pricing', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, store: getStoreMode() });
 });
 
 // SEED: gumawa ng admin account at sample users kung wala pa
@@ -475,6 +476,13 @@ async function seedAccounts() {
 
 await initDb();
 await seedAccounts();
+
+const mode = getStoreMode();
+if (mode === 'file') {
+  console.warn('WARNING: Nakakonekta ka sa data.json FILE storage. Sa Railway, bubura ang data sa bawat deploy. Itakda ang DATABASE_URL variable sa app service para gumamit ng Postgres.');
+} else {
+  console.log('Connected to Postgres database (DATABASE_URL). Data will persist across deployments.');
+}
 
 app.listen(PORT, () => {
   console.log(`Mastery Review PH running at http://localhost:${PORT}`);

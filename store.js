@@ -77,6 +77,10 @@ if (USE_DB) {
   });
 }
 
+export function getStoreMode() {
+  return USE_DB ? 'postgres' : 'file';
+}
+
 // ===================== Postgres backend (Supabase / Railway DB) =====================
 const PG = {
   async initDb() {
