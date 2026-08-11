@@ -179,6 +179,14 @@ function shuffle(arr) {
   return a;
 }
 
+// Durasyon ng full mock exam base sa aktwal na CSC format:
+// Professional = 170 tanong sa 3h10m (190 min) -> ~67.1 segundo bawat tanong
+// Subprofessional = 165 tanong sa 2h40m (160 min) -> ~58.2 segundo bawat tanong
+function examDurationSeconds(t, count) {
+  const secPerQuestion = t.examType === 'nonpro' ? 58.2 : 67.1;
+  return Math.round(count * secPerQuestion);
+}
+
 const attempts = new Map(); // attemptId -> { testId, questions, userId, at }
 
 app.get('/api/tests/:id', async (req, res) => {
@@ -205,18 +213,32 @@ app.get('/api/tests/:id', async (req, res) => {
       });
     }
   }
-  // Random na pumili ng sampleCount na tanong mula sa bank
-  const sampled = shuffle(t.bank).slice(0, t.sampleCount);
+  // Full mock exam (?full=1): kunin ang LAHAT ng tanong mula sa bank, may timer
+  const isFull = req.query.full === '1' || req.query.full === 'true';
+  const pool = isFull ? t.bank : shuffle(t.bank).slice(0, t.sampleCount);
+  const durationSeconds = isFull ? examDurationSeconds(t, pool.length) : 0;
   // Mag-imbak ng attempt para ma-score nang tama ang mga ito
   const token = `${t.id}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
   attempts.set(token, {
     testId: t.id,
     userId: user?.id || null,
-    questions: sampled,
+    questions: pool,
+    mode: isFull ? 'full' : 'practice',
+    durationSeconds,
+    startedAt: Date.now(),
     at: Date.now(),
   });
-  const questions = sampled.map((q) => ({ q: q.q, options: q.options, figure: q.figure || null }));
-  res.json({ id: t.id, title: t.title, premium: t.premium, attemptId: token, questions });
+  const questions = pool.map((q) => ({ q: q.q, options: q.options, figure: q.figure || null }));
+  res.json({
+    id: t.id,
+    title: t.title,
+    premium: t.premium,
+    attemptId: token,
+    mode: isFull ? 'full' : 'practice',
+    durationSeconds,
+    questionCount: pool.length,
+    questions,
+  });
 });
 
 app.post('/api/tests/:id/score', async (req, res) => {
@@ -251,6 +273,15 @@ app.post('/api/tests/:id/score', async (req, res) => {
   if (attempt.userId && user.id !== attempt.userId) {
     return res.status(403).json({ error: 'Hindi ito iyong attempt.' });
   }
+  // Enforce ang timer para sa full mock exam (server-side, 60-sec grace para sa network lag)
+  let timeUp = false;
+  if (attempt.mode === 'full' && attempt.durationSeconds > 0) {
+    const elapsed = Date.now() - attempt.startedAt;
+    timeUp = elapsed > attempt.durationSeconds * 1000;
+    if (elapsed > (attempt.durationSeconds + 60) * 1000) {
+      return res.status(400).json({ error: 'Naubos na ang oras ng exam. Simulan ang full mock exam ulit para makapag-submit.', timeExpired: true });
+    }
+  }
   const answers = req.body?.answers || [];
   let correct = 0;
   const topicStats = {};
@@ -276,6 +307,8 @@ app.post('/api/tests/:id/score', async (req, res) => {
   attempts.delete(attemptId);
   res.json({
     testId: t.id,
+    mode: attempt.mode,
+    timeUp,
     correct,
     total,
     score,

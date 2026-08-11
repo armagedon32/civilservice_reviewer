@@ -161,10 +161,13 @@ function renderTestHome(data) {
     card.innerHTML = `
       <h3>${t.title}</h3>
       <p>${t.blurb}</p>
-      <p class="meta">${t.sampleCount} random na tanong mula sa ${t.totalQuestions} tanong sa bank</p>
+      <p class="meta">${t.sampleCount} random na tanong sa Practice · ${t.totalQuestions} sa Full Mock Exam</p>
       ${badge} ${lockHint}
+      <div class="card-actions">
+        <button class="btn-primary" ${available ? '' : 'disabled'} onclick="event.stopPropagation(); openTest(${t.id})">Start Practice</button>
+        <button class="btn-ghost" ${available ? '' : 'disabled'} onclick="event.stopPropagation(); openTest(${t.id}, true)">⏱ Full Mock Exam</button>
+      </div>
     `;
-    if (available) card.addEventListener('click', () => openTest(t.id));
     listEl.appendChild(card);
   });
   const subBtn = $('#bannerSubBtn');
@@ -174,13 +177,14 @@ function renderTestHome(data) {
   show('#view-home');
 }
 
-async function openTest(id) {
+async function openTest(id, full = false) {
   try {
-    const d = await api(`/api/tests/${id}`);
+    const d = await api(`/api/tests/${id}${full ? '?full=1' : ''}`);
     currentTest = d;
     currentAnswers = new Array(d.questions.length).fill(undefined);
-    $('#testTitle').textContent = d.title;
+    $('#testTitle').textContent = d.title + (d.mode === 'full' ? ' — Full Mock Exam' : '');
     renderQuiz();
+    startTimerIfNeeded();
     show('#view-test');
   } catch (err) {
     if (err.loginRequired) {
@@ -196,6 +200,8 @@ async function openTest(id) {
       if (confirm('Ito ay para sa mga subscriber. Mag-subscribe ka na?')) {
         openSubscribe();
       }
+    } else if (err.examTypeMismatch) {
+      alert(err.message);
     } else {
       alert(err.message);
     }
@@ -205,6 +211,16 @@ async function openTest(id) {
 function renderQuiz() {
   const area = $('#quizArea');
   area.innerHTML = '';
+  if (currentTest.mode === 'full') {
+    const timerBar = document.createElement('div');
+    timerBar.className = 'timer-bar';
+    timerBar.innerHTML = `
+      <span class="timer-label">⏱ Full Mock Exam</span>
+      <span class="timer-count" id="timerCount">${formatTime(currentTest.durationSeconds)}</span>
+      <span class="timer-meta">${currentTest.questionCount} na tanong · ${formatDuration(currentTest.durationSeconds)}</span>
+    `;
+    area.appendChild(timerBar);
+  }
   currentTest.questions.forEach((q, i) => {
     const block = document.createElement('div');
     block.className = 'question-block';
@@ -229,6 +245,46 @@ function renderQuiz() {
   area.appendChild(submit);
 }
 
+function formatTime(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function formatDuration(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.round((totalSeconds % 3600) / 60);
+  if (h > 0) return `${h} oras ${m > 0 ? m + ' minuto' : ''}`.trim();
+  return `${m} minuto`;
+}
+
+let timerInterval = null;
+
+function startTimerIfNeeded() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  if (currentTest.mode !== 'full' || !currentTest.durationSeconds) return;
+  const deadline = Date.now() + currentTest.durationSeconds * 1000;
+  const countEl = $('#timerCount');
+  if (!countEl) return;
+  timerInterval = setInterval(() => {
+    const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    countEl.textContent = formatTime(remaining);
+    if (remaining <= 60) countEl.classList.add('timer-low');
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      alert('⏱ Naubos na ang oras. Awtomatikong isinumite ang iyong mga sagot.');
+      submitAnswers(true);
+    }
+  }, 500);
+}
+
 function selectOption(qIndex, oIndex) {
   currentAnswers[qIndex] = oIndex;
   const blocks = document.querySelectorAll('.question-block');
@@ -236,21 +292,30 @@ function selectOption(qIndex, oIndex) {
   opts.forEach((el, idx) => el.classList.toggle('selected', idx === oIndex));
 }
 
-async function submitAnswers() {
+async function submitAnswers(autoSubmit = false) {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
   const unanswered = currentAnswers.filter((a) => a === undefined).length;
-  if (unanswered > 0 && !confirm(`May ${unanswered} tanong na hindi pa nasagot. I-submit pa rin?`)) return;
+  if (!autoSubmit && unanswered > 0 && !confirm(`May ${unanswered} tanong na hindi pa nasagot. I-submit pa rin?`)) return;
   try {
     const r = await api(`/api/tests/${currentTest.id}/score`, {
       method: 'POST',
       body: JSON.stringify({ attemptId: currentTest.attemptId, answers: currentAnswers }),
     });
-    showResult(r);
+    showResult(r, autoSubmit);
   } catch (err) {
-    alert(err.message);
+    if (err.timeExpired) {
+      alert(err.message);
+      loadTests();
+    } else {
+      alert(err.message);
+    }
   }
 }
 
-function showResult(r) {
+function showResult(r, autoSubmit = false) {
   let reviewHtml = '';
   if (r.reviewEnabled) {
     const blocks = document.querySelectorAll('.question-block');
@@ -291,6 +356,7 @@ function showResult(r) {
   }
   $('#resultBody').innerHTML = `
     <div class="score ${r.passed ? 'check' : 'fail'}">${r.score}%</div>
+    ${r.timeUp ? '<div class="timeup-note">⏱ Naubos ang oras noong isumite ang mga sagot.</div>' : ''}
     <p>${r.correct} sa ${r.total} ang tamang sagot. ${r.passed ? 'PAGPASADO ka! Mahusay.' : 'Subukan ulit. Target: 70%.'}</p>
     <div class="review-container">${reviewHtml}</div>
   `;
