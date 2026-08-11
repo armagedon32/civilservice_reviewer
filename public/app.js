@@ -34,16 +34,19 @@ function renderAuth() {
   const badge = $('#userBadge');
   const loginBtn = $('#loginBtn');
   const logoutBtn = $('#logoutBtn');
+  const adminBtn = $('#adminBtn');
   if (currentUser) {
     const examLabel = currentUser.examType === 'nonpro' ? 'Subprofessional' : (currentUser.examType === 'professional' ? 'Professional' : '');
     badge.textContent = `${currentUser.email} · ${currentUser.plan === 'paid' ? 'Premium' : 'Free'}${examLabel ? ` · ${examLabel}` : ''}`;
     badge.classList.remove('hidden');
     logoutBtn.classList.remove('hidden');
     loginBtn.classList.add('hidden');
+    adminBtn.classList.toggle('hidden', !currentUser.isAdmin);
   } else {
     badge.classList.add('hidden');
     logoutBtn.classList.add('hidden');
     loginBtn.classList.remove('hidden');
+    adminBtn.classList.add('hidden');
   }
   renderExamTypeBanner();
 }
