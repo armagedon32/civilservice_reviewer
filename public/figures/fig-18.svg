@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="184" viewBox="0 0 500 184" font-family="Arial, Helvetica, sans-serif">
+<rect x="1" y="1" width="498" height="182" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+<text x="55" y="20" text-anchor="middle" font-size="16" font-weight="700" fill="#334155">A</text>
+<rect x="12" y="52" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="58" y="52" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="12" y="98" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="58" y="98" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="12" y="144" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="58" y="144" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<text x="185" y="20" text-anchor="middle" font-size="16" font-weight="700" fill="#334155">B</text>
+<rect x="142" y="52" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="188" y="52" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="142" y="98" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="188" y="98" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="142" y="144" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="188" y="144" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<text x="315" y="20" text-anchor="middle" font-size="16" font-weight="700" fill="#334155">C</text>
+<rect x="272" y="52" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="318" y="52" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="272" y="98" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="318" y="98" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="272" y="144" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="318" y="144" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<text x="445" y="20" text-anchor="middle" font-size="16" font-weight="700" fill="#334155">D</text>
+<rect x="402" y="52" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="448" y="52" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="402" y="98" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="448" y="98" width="40" height="40" rx="6" fill="#2b5cb8"/>
+<rect x="402" y="144" width="40" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="2"/>
+<rect x="448" y="144" width="40" height="40" rx="6" fill="#2b5cb8"/>
+</svg>

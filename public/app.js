@@ -236,7 +236,7 @@ function renderQuiz() {
     });
     block.innerHTML = `
       <div class="qnum">Tanong ${i + 1}</div>
-      ${q.figure ? `<div class="figure"><pre>${q.figure}</pre></div>` : ''}
+      ${q.image ? `<div class="figure"><img src="${q.image}" alt="Pigura para sa tanong ${i + 1}" loading="lazy"></div>` : (q.figure ? `<div class="figure"><pre>${q.figure}</pre></div>` : '')}
       <div class="qtext">${q.q}</div>
       <div class="option-list">${optionsHtml}</div>
     `;
@@ -339,7 +339,7 @@ function showResult(r, autoSubmit = false) {
       return `
         <div class="question-block review-block">
           <div class="qnum">Tanong ${res.questionIndex + 1} ${res.correct ? '· Tamang sagot' : '· Mali'}</div>
-          ${q.figure ? `<div class="figure"><pre>${q.figure}</pre></div>` : ''}
+          ${q.image ? `<div class="figure"><img src="${q.image}" alt="Pigura para sa tanong ${res.questionIndex + 1}" loading="lazy"></div>` : (q.figure ? `<div class="figure"><pre>${q.figure}</pre></div>` : '')}
           <div class="qtext">${q.q}</div>
           <div class="option-list">${optHtml}</div>
           <div class="explanation"><span class="expl-icon">${res.icon || '💡'}</span> <strong>Paliwanag:</strong> ${res.explanation || ''}</div>

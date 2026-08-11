@@ -228,7 +228,7 @@ app.get('/api/tests/:id', async (req, res) => {
     startedAt: Date.now(),
     at: Date.now(),
   });
-  const questions = pool.map((q) => ({ q: q.q, options: q.options, figure: q.figure || null }));
+  const questions = pool.map((q) => ({ q: q.q, options: q.options, figure: q.figure || null, image: q.image || null }));
   res.json({
     id: t.id,
     title: t.title,

@@ -118,3 +118,8 @@ export const figAnalytical = [
 ###     #.#     ###     #.#     ?
 #.#     ###     #.#     ###     ?`, options: ["### / #.#", "#.# / ###", "### / ###", "#.# / #.#"], answer: 0, topic: "Analytical", explanation: "Alternating: solid (###) at gitnang-puwang (#.#). Pagkatapos ng #.# / ###, dumarating muli ang ### / #.#.", icon: "🔄" },
 ];
+
+// I-attach ang image path sa bawat figure question para sa frontend rendering.
+figAnalytical.forEach((q, i) => {
+  q.image = `/figures/fig-${String(i + 1).padStart(2, '0')}.svg`;
+});

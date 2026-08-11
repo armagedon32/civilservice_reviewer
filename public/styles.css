@@ -346,12 +346,19 @@ main {
 }
 
 .figure {
-  margin: 10px 0;
-  padding: 12px;
-  background: #0f172a;
-  border: 1px solid #334155;
-  border-radius: 10px;
+  margin: 6px 0 4px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: flex-start;
   overflow-x: auto;
+}
+
+.figure img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 .figure pre {
