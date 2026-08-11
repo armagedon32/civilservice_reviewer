@@ -3,6 +3,7 @@
 // Sa bawat subok, RANDOM na pipili ang server ng `sampleCount` tanong mula sa bank.
 
 import { extraTest1, extraTest2, extraTest3, extraTest4 } from './questions-extra.js';
+import { lawNonPro, lawPro } from './questions-laws.js';
 
 export const tests = [
   {
@@ -116,7 +117,7 @@ export const tests = [
       { q: 'Ano ang tawag sa batas na nagtatakda ng kodigo ng asal sa mga pampublikong opisyal?', options: ['RA 6713', 'RA 9003', 'RA 8749', 'RA 2000'], answer: 0, topic: "General Info", explanation: 'Ang R.A. 6713 o "Code of Conduct and Ethical Standards for Public Officials and Employees" ang nagtatakda nito.', icon: '📋' },
       { q: 'Ayon sa Universal Declaration of Human Rights, ang mga karapatan ng tao ay ___.', options: ['Ibinibigay ng Estado', 'Likas at hindi maaalis', 'Pansamantala', 'Para lamang sa mamamayan ng bansa'], answer: 1, topic: "General Info", explanation: 'Ang mga karapatang pantao ay likas, unibersal, at hindi maaalis (inalienable) — hindi ibinibigay ng Estado kundi bahagi ng pagkatao.', icon: '🤝' },
       { q: 'Ano ang pangunahing layunin ng environment management and protection?', options: ['Pabilisin ang industriyalisasyon', 'Protektahan ang likas na yaman para sa susunod na henerasyon', 'Magtayo ng mas maraming pabrika', 'Dagdagan ang basura'], answer: 1, topic: "General Info", explanation: 'Ang layunin ay protektahan ang likas na yaman at tiyakin ang sustenableng pag-unlad para sa mga susunod na henerasyon.', icon: '🌱' },
-      { q: 'Sa ilalim ng R.A. 6713, ano ang dapat gawin ng pampublikong opisyal sa mga regalo?', options: ['Tanggapin ang lahat', 'I-deklara ang kalabisan at iwasan ang halaga', 'Itago sa lihim', 'Ibigay sa kamag-anak'], answer: 1, topic: "General Info", explanation: 'Ang RA 6713 ay nagbabawal sa mga opisyal na tumanggap ng regalo na lampas sa itinakdang halaga upang maiwasan ang katiwalian.', icon: '🎁' },
+      { q: 'Sa ilalim ng R.A. 6713, ano ang dapat gawin ng pampublikong opisyal sa mga regalo?', options: ['Tanggapin ang lahat', 'Huwag tumanggap maliban kung maliit lamang ang halaga', 'Itago sa lihim', 'Ibigay sa kamag-anak'], answer: 1, topic: "General Info", explanation: 'Sa ilalim ng RA 6713, bawal tumanggap ang opisyal ng regalo na may halagang higit sa nominal at maaaring makaapekto sa kanyang opisyal na tungkulin.', icon: '🎁' },
       // ===== Verbal Ability =====
       { q: 'Piliin ang salitang KASINGKAHULUGAN ng "masagana".', options: ['Salat', 'Sagana', 'Kapos', 'Dukha'], answer: 1, topic: "Verbal", explanation: 'Ang "masagana" ay nangangahulugang sagana o marami.', icon: '🇵🇭' },
       { q: 'Piliin ang KASALUNGAT (antonym) ng "maliwanag".', options: ['Matindi', 'Madilim', 'Maliit', 'Tahimik'], answer: 1, topic: "Verbal", explanation: 'Ang maliwanag ay may ningning; ang kasalungat nito ay madilim.', icon: '🌙' },
@@ -137,6 +138,7 @@ export const tests = [
       { q: 'Kung ang ratio ng guro : mag-aaral ay 1 : 25, at may 75 mag-aaral, ilan ang guro?', options: ['2', '3', '4', '5'], answer: 1, topic: "Numerical", explanation: '75 ÷ 25 = 3 guro.', icon: '🍎' },
       { q: 'Kung ang isang sako ng bigas ay ₱1,800 at may 75% na diskwento, magkano ang babayaran?', options: ['₱350', '₱750', '₱450', '₱1,350'], answer: 2, topic: "Numerical", explanation: '1800 × 0.25 = ₱450 (25% na lang ang babayaran).', icon: '🌾' },
       ...extraTest3,
+      ...lawNonPro,
     ],
   },
   {
@@ -174,6 +176,7 @@ export const tests = [
       { q: 'Data interpretation: Sa 200 respondents, 40% ang pumili ng "Bata". Ilan ang pumili ng "Pang-adulto"?', options: ['40', '100', '120', '140'], answer: 2, topic: "Analytical", explanation: 'Kung 40% ay Bata, ang 60% ay Pang-adulto: 200 × 0.60 = 120.', icon: '📊' },
       { q: 'Ano ang HINDI totoo tungkol sa rebolusyon?', options: ['Isang malaking pagbabago.', 'Maaaring mapayapa.', 'Laging marahas.', 'Nababago ang lipunan.'], answer: 2, topic: "Analytical", explanation: 'Ang rebolusyon ay hindi palaging marahas — maaaring mapayapa ang pagbabago.', icon: '🌐' },
       ...extraTest4,
+      ...lawPro,
     ],
   },
 ];

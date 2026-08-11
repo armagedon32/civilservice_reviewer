@@ -1,0 +1,30 @@
+MASTERY REVIEW PH — PREMIUM TEST ACCOUNTS (LOCALHOST)
+========================================================
+Base URL: http://localhost:3000
+(Patakbuhin ang: node server.js  sa folder na D:\DDI\webapp-1)
+
+PREMIUM TEST ACCOUNTS
+--------------------------------------------------------
+1) Email: test.nonpro@mastery.ph
+   Password: nonpro12345
+   Exam Type: Subprofessional (Non-Pro)
+   Access: Test #3 lang
+
+2) Email: test.prof@mastery.ph
+   Password: prof12345
+   Exam Type: Professional
+   Access: Test #1, #2, #4
+
+ADMIN ACCOUNT
+--------------------------------------------------------
+3) Email: admin@mastery.ph
+   Password: adminpass123
+   Access: Lahat ng tests + Admin dashboard
+   Admin key (kung kailangan): masterypass2026
+
+TANDAAN:
+- Premium = 30 araw na subscription (expires: 2026-09-10)
+- Ang mga account na ito ay local copies lamang (data.json),
+  hiwalay sa Railway database.
+- Para sa LIVE (Railway), gamitin ang parehong credentials sa:
+  https://civilservicereviewer-production.up.railway.app/
