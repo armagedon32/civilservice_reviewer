@@ -117,6 +117,7 @@ $('#examTypeSendBtn').addEventListener('click', async () => {
 });
 
 async function loadTests() {
+  clearTimer();
   try {
     const data = await api('/api/tests');
     renderTestHome(data);
@@ -266,11 +267,15 @@ function formatDuration(totalSeconds) {
 
 let timerInterval = null;
 
-function startTimerIfNeeded() {
+function clearTimer() {
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
   }
+}
+
+function startTimerIfNeeded() {
+  clearTimer();
   if (currentTest.mode !== 'full' || !currentTest.durationSeconds) return;
   const deadline = Date.now() + currentTest.durationSeconds * 1000;
   const countEl = $('#timerCount');
@@ -280,8 +285,7 @@ function startTimerIfNeeded() {
     countEl.textContent = formatTime(remaining);
     if (remaining <= 60) countEl.classList.add('timer-low');
     if (remaining <= 0) {
-      clearInterval(timerInterval);
-      timerInterval = null;
+      clearTimer();
       alert('⏱ Naubos na ang oras. Awtomatikong isinumite ang iyong mga sagot.');
       submitAnswers(true);
     }
@@ -296,10 +300,7 @@ function selectOption(qIndex, oIndex) {
 }
 
 async function submitAnswers(autoSubmit = false) {
-  if (timerInterval) {
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
+  clearTimer();
   const unanswered = currentAnswers.filter((a) => a === undefined).length;
   if (!autoSubmit && unanswered > 0 && !confirm(`May ${unanswered} tanong na hindi pa nasagot. I-submit pa rin?`)) return;
   try {

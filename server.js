@@ -1,4 +1,5 @@
 ﻿import express from 'express';
+import compression from 'compression';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -41,7 +42,16 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'adminpass123';
 const SEED_DEMOS = process.env.SEED_DEMOS !== 'false'; // i-off ang demo users sa production kung ayaw mo
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(compression());
+// I-cache ang mga static assets (HTML/CSS/JS/SVG) para hindi i-download muli sa bawat navigation
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: '1h',
+  etag: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.svg')) res.setHeader('Cache-Control', 'public, max-age=86400');
+    else if (filePath.endsWith('.css') || filePath.endsWith('.js')) res.setHeader('Cache-Control', 'public, max-age=3600');
+  },
+}));
 
 function getSessionToken(req) {
   return req.headers.cookie
@@ -130,9 +140,23 @@ app.get('/api/me', async (req, res) => {
   res.json({ user: publicUser(user) });
 });
 
+// Mabilis na in-memory cache ng /api/tests para sa bawat (userId, isPaid) combination.
+// I-invalidate sa loob ng 30 segundo; hindi nito sinisira ang live data dahil maliit lang ang TTL.
+const testsCache = new Map();
+const TESTS_CACHE_TTL = 30 * 1000;
+
+function cacheKeyFor(userId, isPaid) {
+  return `${userId || 'anon'}|${isPaid ? 'paid' : 'free'}`;
+}
+
 app.get('/api/tests', async (req, res) => {
   const user = await currentUser(req);
   const isPaid = isSubscribed(user);
+  const key = cacheKeyFor(user?.id, isPaid);
+  const cached = testsCache.get(key);
+  if (cached && Date.now() - cached.at < TESTS_CACHE_TTL) {
+    return res.json(cached.body);
+  }
   const freeLimit = 1; // ilang beses maaaring kunin ang libreng test
   const list = tests
     // Kung naka-login ang user, ipakita LANG ang test na akma sa kanyang uri ng pagsusulit
@@ -166,7 +190,9 @@ app.get('/api/tests', async (req, res) => {
         sampleCount: t.sampleCount,
       };
     });
-  res.json({ tests: await Promise.all(list), plan: isPaid ? 'paid' : 'free' });
+  const body = { tests: await Promise.all(list), plan: isPaid ? 'paid' : 'free' };
+  testsCache.set(key, { at: Date.now(), body });
+  res.json(body);
 });
 
 // Shuffle para sa random sampling
