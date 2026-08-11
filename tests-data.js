@@ -4,6 +4,11 @@
 
 import { extraTest1, extraTest2, extraTest3, extraTest4 } from './questions-extra.js';
 import { lawNonPro, lawPro } from './questions-laws.js';
+import { figAnalytical } from './questions-figures.js';
+
+const figT1 = figAnalytical.slice(0, 10);
+const figT2 = figAnalytical.slice(10, 20);
+const figT4 = figAnalytical.slice(20);
 
 export const tests = [
   {
@@ -53,6 +58,7 @@ export const tests = [
       { q: 'Analogy: KUNG PEN : WRITE, ang SCISSORS : _____', options: ['Cut', 'Sew', 'Draw', 'Color'], answer: 0, topic: "Analytical", explanation: 'Ang pen ay ginagamit para magsulat; ang scissors ay para magcut.', icon: '✂️' },
       { q: 'Ang isang worker ay ₱120/oras at nagtrabaho 8 oras. Magkano ang kita?', options: ['₱860', '₱960', '₱960.50', '₱1,000'], answer: 1, topic: "Numerical", explanation: '120 × 8 = ₱960.', icon: '👷' },
       ...extraTest1,
+      ...figT1,
     ],
   },
   {
@@ -68,7 +74,7 @@ export const tests = [
       { q: 'Analogy: Kung DOCTOR : HOSPITAL, ang Lawyer : _____', options: ['Courthouse', 'Office', 'School', 'Library'], answer: 0, topic: "Analytical", explanation: 'Ang doktor ay gumagawa sa ospital; ang lawyer sa korte (courthouse).', icon: '⚖️' },
       { q: 'Piliin ang salitang hindi kabilang:', options: ['Apple', 'Banana', 'Carrot', 'Mango'], answer: 2, topic: "Verbal", explanation: 'Ang apple, banana, mango ay prutas; ang carrot ay gulay.', icon: '🥕' },
       { q: 'Ispeling: Alin ang tamang salita? — "Environment"', options: ['Environment', 'Enviroment', 'Enviornment', 'Environmant'], answer: 0, topic: "Verbal", explanation: '"Environment" ang tamang spelling.', icon: '🌍' },
-      { q: 'Piliin ang synonym ng "Abundant".', options: ['Kulang', 'Sagana', 'Masarap', 'Matamlay'], answer: 1, topic: "Verbal", explanation: '"Abundant" = disana, labis o marami.', icon: '🌾' },
+      { q: 'Piliin ang synonym ng "Abundant".', options: ['Kulang', 'Sagana', 'Masarap', 'Matamlay'], answer: 1, topic: "Verbal", explanation: '"Abundant" = sagana, labis o marami.', icon: '🌾' },
       { q: 'Anong panahunan: "She has been living here since 2019."', options: ['Simple past', 'Present perfect continuous', 'Past perfect', 'Future perfect'], answer: 1, topic: "Numerical", explanation: '"has been living" ay Present Perfect Continuous (aksyon na patuloy hanggang ngayon).', icon: '📚' },
       { q: 'Piliin ang mali sa pangungusap: "The teacher gave me this book the other day yesterday."', options: ['gave', 'this', 'the other day', 'yesterday'], answer: 3, topic: "Verbal", explanation: 'Ang "the other day" at "yesterday" ay REDUNDANT — isa lang ang dapat.', icon: '⚠️' },
       { q: 'Clerical: Piliin ang kopyang magkakapareho: `A4B9 7C2K MH3L`', options: ['A4B9 7C2K MH3L', 'A4B9 7C2K MH2L', 'A4B8 7C2K MH3L', 'A4B9 7C3K MH3L'], answer: 0, topic: "Clerical", explanation: 'Ang orihinal ay eksaktong kopya ng numero at letra.', icon: '🔍' },
@@ -100,6 +106,7 @@ export const tests = [
       { q: 'Piliin ang tamang salita: "If I ___ rich, I would travel."', options: ['am', 'was', 'were', 'be'], answer: 2, topic: "Verbal", explanation: 'Sa second conditional, ginagamit ang "were" para sa lahat ng subjects.', icon: '🎓' },
       { q: 'Analogy: KUNG PEN : INK, ang CAR : _____', options: ['Road', 'Gasoline', 'Wheel', 'Driver'], answer: 1, topic: "Analytical", explanation: 'Ang pen ay nangangailangan ng ink; ang car ay nangangailangan ng gasolina.', icon: '⛽' },
       ...extraTest2,
+      ...figT2,
     ],
   },
 {
@@ -151,7 +158,7 @@ export const tests = [
     bank: [
       // ===== General Information =====
       { q: 'Sino ang nagtataglay ng kapangyarihang magsagawa ng batas (legislative power) sa Pilipinas?', options: ['Pangulo', 'Kongreso', 'Korte Suprema', 'Sandatahang Lakas'], answer: 1, topic: "General Info", explanation: 'Ang kapangyarihang lehislatibo ay nasa Kongreso (Senado at Kapulungan ng mga Kinatawan) ayon sa Artikulo VI ng Saligang Batas.', icon: '🏛️' },
-      { q: 'Alin ang pangunahing tungkulin ng Hudisyal na sangay?', options: ['Gumawa ng batas', 'Sipat ang mga kaso at ipatupad ang batas', 'Magpatupad ng mga programang pangkabuhayan', 'Pamahalaan ang mga lokal na pamahalaan'], answer: 1, topic: "General Info", explanation: 'Ang hudisyal na sangay, pinamumunuan ng Korte Suprema, ay pumapatnubay sa bansa na maging null ng mga labis-tama mga kaso, at magpapatupad ng batas.', icon: '⚖️' },
+      { q: 'Alin ang pangunahing tungkulin ng Hudisyal na sangay?', options: ['Gumawa ng batas', 'Sipat ang mga kaso at ipatupad ang batas', 'Magpatupad ng mga programang pangkabuhayan', 'Pamahalaan ang mga lokal na pamahalaan'], answer: 1, topic: "General Info", explanation: 'Ang hudisyal na sangay, pinamumunuan ng Korte Suprema, ay humahatol sa mga kaso at nagpapatupad ng hustisya batay sa batas.', icon: '⚖️' },
       { q: 'Sa ilalim ng R.A. 6713, ano ang pangalawang "tenet" ng paghahandog ng serbisyong publiko?', options: ['Politikal na Neutralidad', 'Propesyonalismo', 'Katarungan at Katapatan', 'Awtokrasya'], answer: 1, topic: "General Info", explanation: 'Ang RA 6713 ay nagtataguyod ng commitment to public interest, professionalism, justness and sincerity, political neutrality, at responsiveness sa publiko.', icon: '👔' },
       { q: 'Ano ang pangunahing gamit ng Commission on Human Rights (CHR)?', options: ['Mangolekta ng buwis', 'Protektahan at itaguyod ang karapatang pantao', 'Magtayo ng kalsada', 'Mamahala ng barangay'], answer: 1, topic: "General Info", explanation: 'Ang CHR ay isang independiyenteng konstitusyonal na katawan na nagproprotekta at nagtataguyod ng mga karapatang pantao sa Pilipinas.', icon: '🤝' },
       { q: 'Aling batas ang tinatawag na "Ecological Solid Waste Management Act"?', options: ['RA 6713', 'RA 9003', 'RA 8749', 'RA 9275'], answer: 1, topic: "General Info", explanation: 'Ang R.A. 9003 o Ecological Solid Waste Management Act of 2000.', icon: '♻️' },
@@ -159,9 +166,9 @@ export const tests = [
       // ===== Verbal Ability =====
       { q: 'Piliin ang tamang salita: "Each of the candidates ___ a unique platform."', options: ['have', 'has', 'are', 'were'], answer: 1, topic: "Verbal", explanation: '"Each" ay isahan, kaya "has."', icon: '🗳️' },
       { q: 'Piliin ang mali sa pangungusap: "He likes very much to the music."', options: ['very much', 'likes', 'to', 'music'], answer: 2, topic: "Verbal", explanation: 'Ang tamang phrase ay "likes the music" — walang "to."', icon: '⚠️' },
-      { q: 'Piliin ang salitang KASINGKAHULUGAN ng "maingat".', options: ['Pabaya', 'Masipag', 'Maîngaî', 'Mahinahon'], answer: 3, topic: "Verbal", explanation: 'Ang "maingat" na kahulugan ay maunawain at mahinahong gumagawa — ang pinakamalapit ay "mahinahon."', icon: '🇵🇭' },
+      { q: 'Piliin ang KASALUNGAT (antonym) ng "maingat".', options: ['Pabaya', 'Masipag', 'Maagap', 'Mahinahon'], answer: 0, topic: "Verbal", explanation: 'Ang kasalungat ng "maingat" (maingat sa kilos) ay "pabaya" — walang-ingat o nakakaligtaan ang mga bagay.', icon: '🇵🇭' },
       { q: 'Sentence completion: "The new policy ___ widely supported by the community."', options: ['is', 'are', 'were', 'be'], answer: 0, topic: "Verbal", explanation: '"Policy" ay isahan, kaya "is."', icon: '✍️' },
-      { q: 'Error recognition: Alin ang mali sa pangungusap: "She don.t like to attend the meeting."', options: ['She', "don't", 'to attend', 'the meeting'], answer: 1, topic: "Verbal", explanation: 'Ang tamang negative para sa "she" ay "doesn.t" — kaya ang "don.t" ang mali.', icon: '⚠️' },
+      { q: 'Error recognition: Alin ang mali sa pangungusap: "She don.t like to attend the meeting."', options: ['She', "don't", 'to attend', 'the meeting'], answer: 1, topic: "Verbal", explanation: 'Ang tamang negative para sa "she" ay "doesn\'t" — kaya ang "don\'t" ang mali.', icon: '⚠️' },
       // ===== Numerical Ability =====
       { q: 'Kung ang x + 5 = 12, ano ang x?', options: ['5', '7', '12', '17'], answer: 1, topic: "Numerical", explanation: 'x = 12 − 5 = 7.', icon: '🧮' },
       { q: 'Kung 3 manggagawa ang makapag-ayos ng bahay sa 6 na araw, ilang araw ang kailangan ng 6 na tao?', options: ['1', '2', '3', '6'], answer: 2, topic: "Numerical", explanation: 'Dobleng manggagawa = kalahating oras: 6 ÷ 2 = 3 araw.', icon: '🏗️' },
@@ -177,6 +184,7 @@ export const tests = [
       { q: 'Ano ang HINDI totoo tungkol sa rebolusyon?', options: ['Isang malaking pagbabago.', 'Maaaring mapayapa.', 'Laging marahas.', 'Nababago ang lipunan.'], answer: 2, topic: "Analytical", explanation: 'Ang rebolusyon ay hindi palaging marahas — maaaring mapayapa ang pagbabago.', icon: '🌐' },
       ...extraTest4,
       ...lawPro,
+      ...figT4,
     ],
   },
 ];

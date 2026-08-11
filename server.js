@@ -215,7 +215,7 @@ app.get('/api/tests/:id', async (req, res) => {
     questions: sampled,
     at: Date.now(),
   });
-  const questions = sampled.map((q) => ({ q: q.q, options: q.options }));
+  const questions = sampled.map((q) => ({ q: q.q, options: q.options, figure: q.figure || null }));
   res.json({ id: t.id, title: t.title, premium: t.premium, attemptId: token, questions });
 });
 

@@ -278,6 +278,25 @@ main {
   font-size: 1.02rem;
 }
 
+.figure {
+  margin: 10px 0;
+  padding: 12px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.figure pre {
+  margin: 0;
+  font-family: 'Cascadia Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 1rem;
+  line-height: 1.45;
+  color: #e2e8f0;
+  letter-spacing: 0.06em;
+  white-space: pre;
+}
+
 .option {
   display: block;
   margin: 8px 0;
