@@ -10,6 +10,7 @@ export const tests = [
     title: 'Practice Test #1 — Civil Service Professional',
     blurb: 'Verbal, Clerical, Analytical & Numerical — random questions bawat subok.',
     premium: false,
+    examType: 'professional',
     sampleCount: 10,
     bank: [
       { q: 'Piliin ang salitang pinakamalapit sa kahulugan ng "Lucrative".', options: ['Praktikal', 'Marangal', 'Kapaki-pakinabang', 'Malungkot'], answer: 2, topic: "Verbal", explanation: '"Lucrative" ay nangangahulugang kumikita o kumikitang negosyo.', icon: '💡' },
@@ -58,6 +59,7 @@ export const tests = [
     title: 'Practice Test #2 — Civil Service Professional',
     blurb: 'Verbal, Clerical, Analytical & Numerical — premium, random questions.',
     premium: true,
+    examType: 'professional',
     sampleCount: 10,
     bank: [
       { q: 'Piliin ang pinakamalapit na kahulugan ng "Frugal".', options: ['Masinop', 'Mapagbigay', 'Maramot', 'Palabiro'], answer: 0, topic: "Verbal", explanation: '"Frugal" = masinop o maingat sa paggastos.', icon: '💰' },
@@ -104,6 +106,7 @@ export const tests = [
     title: 'Practice Test #3 — Civil Service Subprofessional (Non-Professional)',
     blurb: 'General Information, Verbal, Clerical & Numerical — ayon sa tamang saklaw ng Subprofessional exam.',
     premium: true,
+    examType: 'nonpro',
     sampleCount: 10,
     bank: [
       // ===== General Information =====
@@ -141,6 +144,7 @@ export const tests = [
     title: 'Practice Test #4 — Civil Service Professional',
     blurb: 'General Information, Verbal, Numerical & Analytical — mas mataas na antas ng pag-iisip.',
     premium: true,
+    examType: 'professional',
     sampleCount: 10,
     bank: [
       // ===== General Information =====

@@ -38,6 +38,27 @@
       </div>
 
       <div id="planBanner" class="plan-banner"></div>
+      <div id="examTypeBanner" class="exam-type-banner hidden">
+        <span class="exam-type-pill" id="examTypePill"></span>
+        <span id="examTypeStatus"></span>
+        <button id="examTypeRequestBtn" class="btn-ghost hidden">📨 Mag-request ng pagbabago</button>
+        <button id="examTypeCancel" class="btn-ghost hidden">Kanselahin</button>
+      </div>
+      <div id="examTypeRequestBox" class="hidden">
+        <label>Piliin ang bagong uri ng pagsusulit</label>
+        <div class="exam-type-options">
+          <label class="exam-type-option">
+            <input type="radio" name="newExamType" value="nonpro" />
+            <span><strong>Subprofessional (Non-Pro)</strong><small>Para sa mga posisyong clerical at katulad.</small></span>
+          </label>
+          <label class="exam-type-option">
+            <input type="radio" name="newExamType" value="professional" />
+            <span><strong>Professional</strong><small>Para sa mga propesyonal na posisyon na may bachelor's degree.</small></span>
+          </label>
+        </div>
+        <button id="examTypeSendBtn" class="btn-primary">Ipasa ang request</button>
+        <p id="examTypeMsg" class="note"></p>
+      </div>
       <div class="progress-entry" id="progressEntry">
         <button id="viewProgressBtn" class="btn-ghost">📈 Tingnan ang aking progress</button>
       </div>
@@ -111,6 +132,26 @@
           <input id="authEmail" type="email" required placeholder="hal. juan@email.com" />
           <label>Password</label>
           <input id="authPassword" type="password" required minlength="6" placeholder="Hindi bababa sa 6 na karakter" />
+          <div id="examTypeGroup" class="hidden">
+            <label>Piliin ang iyong uri ng pagsusulit</label>
+            <div class="exam-type-options">
+              <label class="exam-type-option">
+                <input type="radio" name="examType" value="nonpro" />
+                <span>
+                  <strong>Subprofessional (Non-Pro)</strong>
+                  <small>Para sa mga posisyong clerical, trades, at iba pa na hindi nangangailangan ng bachelor's degree.</small>
+                </span>
+              </label>
+              <label class="exam-type-option">
+                <input type="radio" name="examType" value="professional" />
+                <span>
+                  <strong>Professional</strong>
+                  <small>Para sa mga propesyonal na posisyon na nangangailangan ng bachelor's degree.</small>
+                </span>
+              </label>
+            </div>
+            <p class="note">Ang pagpili ay <strong>permanente</strong> matapos mag-sign up. Para baguhin ito, mag-request ka sa admin.</p>
+          </div>
           <p id="authError" class="error hidden"></p>
           <button type="submit" class="btn-primary btn-big">Magpatuloy</button>
         </form>
@@ -136,6 +177,9 @@
         <div id="adminPaySummary"></div>
         <div id="adminPaymentsList" class="history-list"></div>
 
+        <h3 class="review-title">Dashboard — Exam Type Change Requests</h3>
+        <div id="adminExamRequests" class="history-list"></div>
+
         <h3 class="review-title">Dashboard — Mga User</h3>
         <div id="adminSummary" class="stat-grid"></div>
 
@@ -145,6 +189,7 @@
             <thead>
               <tr>
                 <th>Email</th>
+                <th>Exam</th>
                 <th>Plan</th>
                 <th>Subok</th>
                 <th>Highest</th>

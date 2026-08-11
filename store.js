@@ -24,10 +24,29 @@ function normalizeUser(user) {
     passwordHash: user.passwordHash,
     plan: user.plan,
     isAdmin: !!user.isAdmin,
+    examType: user.examType || null,
+    examTypeRequest: user.examTypeRequest || null,
     subscribedAt: user.subscribedAt,
     expiresAt: user.expiresAt,
     createdAt: user.createdAt,
   };
+}
+
+function parseExamRequest(raw) {
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function isExamType(testExamType, user) {
+  if (!user) return false;
+  if (user.isAdmin) return true;
+  const type = user.examType || 'professional';
+  return testExamType === type;
 }
 
 function normalizePayment(p) {
@@ -92,6 +111,8 @@ const PG = {
         password_hash TEXT NOT NULL,
         plan TEXT NOT NULL DEFAULT 'free',
         is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+        exam_type TEXT,
+        exam_type_request TEXT,
         subscribed_at TEXT,
         expires_at TEXT,
         created_at TEXT NOT NULL
@@ -123,6 +144,10 @@ const PG = {
     await dbPool.query(`
       ALTER TABLE history ADD COLUMN IF NOT EXISTS topics TEXT;
     `);
+    await dbPool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS exam_type TEXT;
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS exam_type_request TEXT;
+    `);
   },
   async findUserByEmail(email) {
     const r = await dbPool.query(
@@ -132,7 +157,9 @@ const PG = {
     return r.rows[0] ? normalizeUser({
       id: r.rows[0].id, email: r.rows[0].email, salt: r.rows[0].salt,
       passwordHash: r.rows[0].password_hash, plan: r.rows[0].plan,
-      isAdmin: r.rows[0].is_admin, subscribedAt: r.rows[0].subscribed_at,
+      isAdmin: r.rows[0].is_admin, examType: r.rows[0].exam_type,
+      examTypeRequest: parseExamRequest(r.rows[0].exam_type_request),
+      subscribedAt: r.rows[0].subscribed_at,
       expiresAt: r.rows[0].expires_at, createdAt: r.rows[0].created_at,
     }) : null;
   },
@@ -141,7 +168,9 @@ const PG = {
     return r.rows[0] ? normalizeUser({
       id: r.rows[0].id, email: r.rows[0].email, salt: r.rows[0].salt,
       passwordHash: r.rows[0].password_hash, plan: r.rows[0].plan,
-      isAdmin: r.rows[0].is_admin, subscribedAt: r.rows[0].subscribed_at,
+      isAdmin: r.rows[0].is_admin, examType: r.rows[0].exam_type,
+      examTypeRequest: parseExamRequest(r.rows[0].exam_type_request),
+      subscribedAt: r.rows[0].subscribed_at,
       expiresAt: r.rows[0].expires_at, createdAt: r.rows[0].created_at,
     }) : null;
   },
@@ -150,9 +179,9 @@ const PG = {
     const id = newId();
     const createdAt = new Date().toISOString();
     await dbPool.query(
-      `INSERT INTO users (id, email, salt, password_hash, plan, is_admin, subscribed_at, expires_at, created_at)
-       VALUES ($1,$2,$3,$4,'free',$5,NULL,NULL,$6)`,
-      [id, email, salt, hashPassword(password, salt), !!options.isAdmin, createdAt]
+      `INSERT INTO users (id, email, salt, password_hash, plan, is_admin, exam_type, subscribed_at, expires_at, created_at)
+       VALUES ($1,$2,$3,$4,'free',$5,$6,NULL,NULL,$7)`,
+      [id, email, salt, hashPassword(password, salt), !!options.isAdmin, options.examType || null, createdAt]
     );
     return this.findUserById(id);
   },
@@ -193,6 +222,28 @@ const PG = {
     );
     return this.findUserById(userId);
   },
+  async setExamType(userId, examType) {
+    await dbPool.query(
+      `UPDATE users SET exam_type=$2, exam_type_request=NULL WHERE id=$1`,
+      [userId, examType]
+    );
+    return this.findUserById(userId);
+  },
+  async setExamTypeRequest(userId, requestedType) {
+    const request = JSON.stringify({ requestedType, at: new Date().toISOString() });
+    await dbPool.query(
+      `UPDATE users SET exam_type_request=$2 WHERE id=$1`,
+      [userId, request]
+    );
+    return this.findUserById(userId);
+  },
+  async clearExamTypeRequest(userId) {
+    await dbPool.query(
+      `UPDATE users SET exam_type_request=NULL WHERE id=$1`,
+      [userId]
+    );
+    return this.findUserById(userId);
+  },
   async getHistory(userId) {
     const r = await dbPool.query(
       `SELECT test_id, correct, total, score, topics, created_at FROM history WHERE user_id=$1 ORDER BY created_at ASC`,
@@ -227,7 +278,9 @@ const PG = {
       const user = {
         id: row.id, email: row.email, salt: row.salt,
         passwordHash: row.password_hash, plan: row.plan,
-        isAdmin: row.is_admin, subscribedAt: row.subscribed_at,
+        isAdmin: row.is_admin, examType: row.exam_type,
+        examTypeRequest: parseExamRequest(row.exam_type_request),
+        subscribedAt: row.subscribed_at,
         expiresAt: row.expires_at, createdAt: row.created_at,
       };
       const history = byUser[user.id] || [];
@@ -236,6 +289,8 @@ const PG = {
         email: user.email,
         plan: user.plan,
         isAdmin: !!user.isAdmin,
+        examType: user.examType,
+        examTypeRequest: user.examTypeRequest,
         subscribedAt: user.subscribedAt,
         expiresAt: user.expiresAt,
         activeSubscription: isSubscribed(user),
@@ -319,6 +374,8 @@ const FILE = {
       passwordHash: hashPassword(password, salt),
       plan: 'free',
       isAdmin: options.isAdmin || false,
+      examType: options.examType || null,
+      examTypeRequest: null,
       subscribedAt: null,
       expiresAt: null,
       createdAt: new Date().toISOString(),
@@ -371,6 +428,28 @@ const FILE = {
     saveFileStore();
     return normalizeUser(user);
   },
+  async setExamType(userId, examType) {
+    const user = getFileStore().users.find((x) => x.id === userId);
+    if (!user) return null;
+    user.examType = examType;
+    user.examTypeRequest = null;
+    saveFileStore();
+    return normalizeUser(user);
+  },
+  async setExamTypeRequest(userId, requestedType) {
+    const user = getFileStore().users.find((x) => x.id === userId);
+    if (!user) return null;
+    user.examTypeRequest = { requestedType, at: new Date().toISOString() };
+    saveFileStore();
+    return normalizeUser(user);
+  },
+  async clearExamTypeRequest(userId) {
+    const user = getFileStore().users.find((x) => x.id === userId);
+    if (!user) return null;
+    user.examTypeRequest = null;
+    saveFileStore();
+    return normalizeUser(user);
+  },
   async getHistory(userId) {
     const user = getFileStore().users.find((x) => x.id === userId);
     return (user && user.history || []).map(normalizeHistoryRow);
@@ -394,6 +473,8 @@ const FILE = {
       email: u.email,
       plan: u.plan,
       isAdmin: u.isAdmin,
+      examType: u.examType,
+      examTypeRequest: u.examTypeRequest,
       subscribedAt: u.subscribedAt,
       expiresAt: u.expiresAt,
       activeSubscription: isSubscribed(u),
@@ -482,4 +563,13 @@ export async function setPaymentStatus(paymentId, status) {
 }
 export async function getPendingPaymentsCount() {
   return impl.getPendingPaymentsCount();
+}
+export async function setExamType(userId, examType) {
+  return impl.setExamType(userId, examType);
+}
+export async function setExamTypeRequest(userId, requestedType) {
+  return impl.setExamTypeRequest(userId, requestedType);
+}
+export async function clearExamTypeRequest(userId) {
+  return impl.clearExamTypeRequest(userId);
 }

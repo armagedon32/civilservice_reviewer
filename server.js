@@ -14,6 +14,10 @@ import {
   isSubscribed,
   grantSubscription,
   revokeSubscription,
+  setExamType,
+  setExamTypeRequest,
+  clearExamTypeRequest,
+  isExamType,
   recordScore,
   getHistory,
   getAllUsers,
@@ -75,6 +79,8 @@ function publicUser(u) {
     email: u.email,
     plan: u.plan,
     isAdmin: u.isAdmin || false,
+    examType: u.examType || null,
+    examTypeRequest: u.examTypeRequest || null,
     subscribedAt: u.subscribedAt,
     expiresAt: u.expiresAt,
     activeSubscription: isSubscribed(u),
@@ -83,14 +89,17 @@ function publicUser(u) {
 }
 
 app.post('/api/signup', async (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password, examType } = req.body || {};
   if (!email || !password || String(password).length < 6) {
     return res.status(400).json({ error: 'Kailangan ng valid email at password (hindi bababa sa 6 na karakter).' });
+  }
+  if (!examType || !['nonpro', 'professional'].includes(examType)) {
+    return res.status(400).json({ error: 'Piliin ang iyong uri ng pagsusulit: Subprofessional (Non-Pro) o Professional.' });
   }
   if (await findUserByEmail(email)) {
     return res.status(409).json({ error: 'May account na sa email na ito. Mag-login na lang.' });
   }
-  const user = await createUser(email, password);
+  const user = await createUser(email, password, { examType });
   const token = await createSession(user.id);
   setCookie(res, token);
   res.json({ user: publicUser(user) });
@@ -125,30 +134,38 @@ app.get('/api/tests', async (req, res) => {
   const user = await currentUser(req);
   const isPaid = isSubscribed(user);
   const freeLimit = 1; // ilang beses maaaring kunin ang libreng test
-  const list = tests.map(async (t) => {
-    let attemptLeft = null;
-    let locked = false;
-    if (t.premium) {
-      locked = !isPaid;
-    } else if (user && !isPaid) {
-      const history = await getHistory(user.id);
-      const done = history.filter((h) => h.testId === t.id).length;
-      attemptLeft = Math.max(0, freeLimit - done);
-      locked = attemptLeft === 0;
-    } else if (!user) {
-      locked = false;
-    }
-    return {
-      id: t.id,
-      title: t.title,
-      blurb: t.blurb,
-      premium: t.premium,
-      locked,
-      freeAttemptsLeft: attemptLeft, // subok pa sa libre
-      totalQuestions: t.bank.length,
-      sampleCount: t.sampleCount,
-    };
-  });
+  const list = tests
+    // Kung naka-login ang user, ipakita LANG ang test na akma sa kanyang uri ng pagsusulit
+    .filter((t) => {
+      if (!user) return true;
+      if (user.isAdmin) return true;
+      return isExamType(t.examType, user);
+    })
+    .map(async (t) => {
+      let attemptLeft = null;
+      let locked = false;
+      if (t.premium) {
+        locked = !isPaid;
+      } else if (user && !isPaid) {
+        const history = await getHistory(user.id);
+        const done = history.filter((h) => h.testId === t.id).length;
+        attemptLeft = Math.max(0, freeLimit - done);
+        locked = attemptLeft === 0;
+      } else if (!user) {
+        locked = false;
+      }
+      return {
+        id: t.id,
+        title: t.title,
+        blurb: t.blurb,
+        premium: t.premium,
+        examType: t.examType,
+        locked,
+        freeAttemptsLeft: attemptLeft, // subok pa sa libre
+        totalQuestions: t.bank.length,
+        sampleCount: t.sampleCount,
+      };
+    });
   res.json({ tests: await Promise.all(list), plan: isPaid ? 'paid' : 'free' });
 });
 
@@ -172,6 +189,9 @@ app.get('/api/tests/:id', async (req, res) => {
   const isPaid = isSubscribed(user);
   const t = tests.find((x) => x.id === Number(req.params.id));
   if (!t) return res.status(404).json({ error: 'Hindi mahanap ang test.' });
+  if (!isExamType(t.examType, user)) {
+    return res.status(403).json({ error: 'Ang test na ito ay hindi para sa iyong uri ng pagsusulit. Para baguhin ito, kailangan mong humingi ng permiso sa admin.', examTypeMismatch: true });
+  }
   if (t.premium && !isPaid) {
     return res.status(403).json({ error: 'Ito ay para sa mga subscriber. Mag-subscribe muna.', premium: true });
   }
@@ -207,6 +227,9 @@ app.post('/api/tests/:id/score', async (req, res) => {
   const isPaid = isSubscribed(user);
   const t = tests.find((x) => x.id === Number(req.params.id));
   if (!t) return res.status(404).json({ error: 'Hindi mahanap ang test.' });
+  if (!isExamType(t.examType, user)) {
+    return res.status(403).json({ error: 'Ang test na ito ay hindi para sa iyong uri ng pagsusulit.', examTypeMismatch: true });
+  }
   if (t.premium && !isPaid) {
     return res.status(403).json({ error: 'Ito ay para sa mga subscriber.' });
   }
@@ -410,6 +433,68 @@ app.get('/api/payments/me', async (req, res) => {
   const all = await getAllPayments();
   const mine = all.filter((p) => p.userId === user.id);
   res.json({ payments: mine });
+});
+
+// USER: humiling ng pagbabago ng exam type (hindi kayang baguhin nang direkta)
+app.post('/api/exam-type/request', async (req, res) => {
+  const user = await currentUser(req);
+  if (!user) return res.status(401).json({ error: 'Mag-login muna.' });
+  const { examType } = req.body || {};
+  if (!examType || !['nonpro', 'professional'].includes(examType)) {
+    return res.status(400).json({ error: 'Piliin ang iyong uri ng pagsusulit: Subprofessional (Non-Pro) o Professional.' });
+  }
+  if (examType === user.examType) {
+    return res.status(400).json({ error: 'Ito na ang iyong kasalukuyang uri ng pagsusulit.' });
+  }
+  if (user.examTypeRequest && user.examTypeRequest.requestedType === examType) {
+    return res.status(400).json({ error: 'May nakabinbing request ka na para dito. Hintayin ang admin.' });
+  }
+  const updated = await setExamTypeRequest(user.id, examType);
+  res.json({
+    user: publicUser(updated),
+    message: `Magandang araw! Naipadala na ang iyong request na maging ${examType === 'nonpro' ? 'Subprofessional (Non-Pro)' : 'Professional'}. Hihintayin mo ang pag-apruba ng admin.`,
+  });
+});
+
+// ADMIN: listahan ng mga pending exam type change requests
+app.get('/api/admin/exam-type-requests', async (req, res) => {
+  if (!await isAdmin(req)) return res.status(401).json({ error: 'Admin lang.' });
+  const users = await getAllUsers();
+  const pending = users
+    .filter((u) => u.examTypeRequest && u.examTypeRequest.requestedType)
+    .map((u) => ({
+      userId: u.id,
+      email: u.email,
+      currentType: u.examType,
+      pendingType: u.examTypeRequest.requestedType,
+      requestedAt: u.examTypeRequest.at,
+    }));
+  res.json({ requests: pending });
+});
+
+// ADMIN: i-approve ang exam type change
+app.post('/api/admin/exam-type-requests/:id/approve', async (req, res) => {
+  if (!await isAdmin(req)) return res.status(401).json({ error: 'Admin lang.' });
+  const users = await getAllUsers();
+  const target = users.find((u) => u.id === req.params.id);
+  if (!target || !target.examTypeRequest) return res.status(404).json({ error: 'Walang nakabinbing request ang user na ito.' });
+  const requested = target.examTypeRequest.requestedType;
+  const updated = await setExamType(req.params.id, requested);
+  res.json({
+    ok: true,
+    message: `Inaprubahan ang pagbabago ni ${target.email} sa uri ng pagsusulit (${requested === 'nonpro' ? 'Subprofessional' : 'Professional'}).`,
+    user: publicUser(updated),
+  });
+});
+
+// ADMIN: i-deny ang exam type change
+app.post('/api/admin/exam-type-requests/:id/deny', async (req, res) => {
+  if (!await isAdmin(req)) return res.status(401).json({ error: 'Admin lang.' });
+  const users = await getAllUsers();
+  const target = users.find((u) => u.id === req.params.id);
+  if (!target || !target.examTypeRequest) return res.status(404).json({ error: 'Walang nakabinbing request ang user na ito.' });
+  await clearExamTypeRequest(req.params.id);
+  res.json({ ok: true, message: `Natanggi ang exam type change request ni ${target.email}.` });
 });
 
 // ADMIN: listahan ng mga payment para i-review

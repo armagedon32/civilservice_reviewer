@@ -35,7 +35,8 @@ function renderAuth() {
   const loginBtn = $('#loginBtn');
   const logoutBtn = $('#logoutBtn');
   if (currentUser) {
-    badge.textContent = `${currentUser.email} · ${currentUser.plan === 'paid' ? 'Premium' : 'Free'}`;
+    const examLabel = currentUser.examType === 'nonpro' ? 'Subprofessional' : (currentUser.examType === 'professional' ? 'Professional' : '');
+    badge.textContent = `${currentUser.email} · ${currentUser.plan === 'paid' ? 'Premium' : 'Free'}${examLabel ? ` · ${examLabel}` : ''}`;
     badge.classList.remove('hidden');
     logoutBtn.classList.remove('hidden');
     loginBtn.classList.add('hidden');
@@ -44,7 +45,73 @@ function renderAuth() {
     logoutBtn.classList.add('hidden');
     loginBtn.classList.remove('hidden');
   }
+  renderExamTypeBanner();
 }
+
+function renderExamTypeBanner() {
+  const banner = $('#examTypeBanner');
+  const pill = $('#examTypePill');
+  const status = $('#examTypeStatus');
+  const requestBtn = $('#examTypeRequestBtn');
+  const cancelBtn = $('#examTypeCancel');
+  const box = $('#examTypeRequestBox');
+  if (!currentUser) {
+    banner.classList.add('hidden');
+    box.classList.add('hidden');
+    return;
+  }
+  banner.classList.remove('hidden');
+  cancelBtn.classList.add('hidden');
+  if (currentUser.examType === 'nonpro') {
+    pill.textContent = 'Subprofessional (Non-Pro)';
+  } else if (currentUser.examType === 'professional') {
+    pill.textContent = 'Professional';
+  } else {
+    pill.textContent = 'Exam type: —';
+  }
+  if (currentUser.isAdmin) {
+    status.textContent = '';
+    requestBtn.classList.add('hidden');
+    box.classList.add('hidden');
+    return;
+  }
+  if (currentUser.examTypeRequest && currentUser.examTypeRequest.requestedType) {
+    const pending = currentUser.examTypeRequest.requestedType === 'nonpro' ? 'Subprofessional (Non-Pro)' : 'Professional';
+    status.textContent = `📨 May nakabinbing request ka na maging ${pending}. Hihintayin mo ang pag-apruba ng admin.`;
+    requestBtn.classList.add('hidden');
+    box.classList.add('hidden');
+    cancelBtn.classList.add('hidden');
+  } else {
+    status.textContent = 'Hindi mababago ang uri ng pagsusulit nang mag-isa. Kung kailangang palitan, mag-request sa admin.';
+    requestBtn.classList.remove('hidden');
+    box.classList.add('hidden');
+  }
+}
+
+$('#examTypeRequestBtn').addEventListener('click', () => {
+  const box = $('#examTypeRequestBox');
+  box.classList.toggle('hidden');
+  $('#examTypeMsg').textContent = '';
+  document.querySelectorAll('input[name="newExamType"]').forEach((r) => (r.checked = false));
+});
+
+$('#examTypeSendBtn').addEventListener('click', async () => {
+  const checked = document.querySelector('input[name="newExamType"]:checked');
+  const msg = $('#examTypeMsg');
+  if (!checked) {
+    msg.textContent = 'Pumili muna ng bagong uri ng pagsusulit.';
+    return;
+  }
+  try {
+    const d = await api('/api/exam-type/request', { method: 'POST', body: JSON.stringify({ examType: checked.value }) });
+    currentUser = d.user;
+    msg.textContent = `✅ ${d.message}`;
+    renderAuth();
+    loadTests();
+  } catch (err) {
+    msg.textContent = err.message;
+  }
+});
 
 async function loadTests() {
   try {
@@ -302,6 +369,7 @@ function renderAuthForm() {
   $('#authForm').querySelector('button[type="submit"]').textContent = isLogin ? 'Mag-login' : 'Gumawa ng account';
   $('#toggleAuth').textContent = isLogin ? 'Mag-sign up' : 'May account ka na? Mag-login';
   $('#authError').classList.add('hidden');
+  $('#examTypeGroup').classList.toggle('hidden', isLogin);
 }
 
 $('#authForm').addEventListener('submit', async (e) => {
@@ -311,8 +379,19 @@ $('#authForm').addEventListener('submit', async (e) => {
   const errorEl = $('#authError');
   try {
     const endpoint = authMode === 'login' ? '/api/login' : '/api/signup';
-    const d = await api(endpoint, { method: 'POST', body: JSON.stringify({ email, password }) });
+    let body = { email, password };
+    if (authMode === 'signup') {
+      const examType = document.querySelector('input[name="examType"]:checked');
+      if (!examType) {
+        errorEl.textContent = 'Piliin ang uri ng pagsusulit: Subprofessional (Non-Pro) o Professional.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+      body.examType = examType.value;
+    }
+    const d = await api(endpoint, { method: 'POST', body: JSON.stringify(body) });
     currentUser = d.user;
+    authMode = 'login';
     renderAuth();
     loadTests();
   } catch (err) {
@@ -324,6 +403,7 @@ $('#authForm').addEventListener('submit', async (e) => {
 $('#logoutBtn').addEventListener('click', async () => {
   await api('/api/logout', { method: 'POST' });
   currentUser = null;
+  authMode = 'login';
   renderAuth();
   loadTests();
 });
@@ -458,11 +538,15 @@ async function loadAdminDashboard(key) {
 
     const body = $('#adminUsersBody');
     if (!data.users.length) {
-      body.innerHTML = '<tr><td colspan="6">Wala pang users.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7">Wala pang users.</td></tr>';
     } else {
       body.innerHTML = data.users.map((u) => `
         <tr>
           <td>${u.email}${u.isAdmin ? ' <span class="badge badge-premium">Admin</span>' : ''}</td>
+          <td>
+            ${u.examType === 'nonpro' ? '<span class="badge badge-free">Subprofessional</span>' : (u.examType === 'professional' ? '<span class="badge badge-free">Professional</span>' : '<span class="badge badge-premium">—</span>')}
+            ${u.examTypeRequest && u.examTypeRequest.requestedType ? `<div class="history-meta">📨 request → ${u.examTypeRequest.requestedType}</div>` : ''}
+          </td>
           <td>
             <span class="badge ${u.activeSubscription ? 'badge-free' : 'badge-premium'}">${u.activeSubscription ? 'Subscribed' : (u.isAdmin ? 'Admin' : 'Free')}</span>
             ${u.subscribedAt && u.expiresAt && !u.activeSubscription ? `<div class="history-meta">expired ${new Date(u.expiresAt).toLocaleDateString()}</div>` : ''}
@@ -476,6 +560,7 @@ async function loadAdminDashboard(key) {
     }
     show('#view-admin');
     loadAdminPayments(key);
+    loadAdminExamRequests(key);
   } catch (err) {
     $('#adminGateError').textContent = err.message;
     $('#adminGateError').classList.remove('hidden');
@@ -525,6 +610,46 @@ async function approvePayment(id, key) {
 
 async function denyPayment(id, key) {
   const res = await fetch(`/api/admin/payments/${id}/deny`, { method: 'POST', headers: { 'x-admin-key': key } });
+  const d = await res.json();
+  if (!res.ok) { alert(d.error || 'May error.'); return; }
+  alert(d.message);
+  loadAdminDashboard(key);
+}
+
+async function loadAdminExamRequests(key) {
+  try {
+    const res = await fetch('/api/admin/exam-type-requests', { headers: { 'x-admin-key': key } });
+    if (!res.ok) return;
+    const d = await res.json();
+    const el = $('#adminExamRequests');
+    if (!d.requests.length) {
+      el.innerHTML = '<p class="note">Walang pending na exam type change request.</p>';
+      return;
+    }
+    el.innerHTML = d.requests.map((r) => `
+      <div class="history-row">
+        <div class="history-info">
+          <div><strong>${r.email}</strong> — ${r.currentType} → <strong>${r.pendingType}</strong></div>
+          <div class="history-meta">In-request: ${new Date(r.requestedAt).toLocaleString()}</div>
+        </div>
+        <button class="btn-primary" style="padding:6px 12px;font-size:0.8rem" onclick="approveExamType('${r.userId}', '${key}')">I-approve</button>
+        <button class="btn-ghost" style="padding:6px 12px;font-size:0.8rem" onclick="denyExamType('${r.userId}', '${key}')">I-deny</button>
+      </div>
+    `).join('');
+  } catch (e) { /* ignore */ }
+}
+
+async function approveExamType(userId, key) {
+  const res = await fetch(`/api/admin/exam-type-requests/${userId}/approve`, { method: 'POST', headers: { 'x-admin-key': key } });
+  const d = await res.json();
+  if (!res.ok) { alert(d.error || 'May error.'); return; }
+  alert(d.message);
+  loadAdminDashboard(key);
+  refreshUser();
+}
+
+async function denyExamType(userId, key) {
+  const res = await fetch(`/api/admin/exam-type-requests/${userId}/deny`, { method: 'POST', headers: { 'x-admin-key': key } });
   const d = await res.json();
   if (!res.ok) { alert(d.error || 'May error.'); return; }
   alert(d.message);
