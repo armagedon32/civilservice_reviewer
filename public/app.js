@@ -192,6 +192,18 @@ async function loadTests() {
   }
 }
 
+// Lightweight analytics beacon — fire-and-forget, hindi binabago ang UX
+function track(event = 'pageview') {
+  try {
+    const body = new Blob([JSON.stringify({ event })], { type: 'application/json' });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', body);
+    } else {
+      fetch('/api/track', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ event }) }).catch(() => {});
+    }
+  } catch { /* huwag pansinin */ }
+}
+
 let qotd = null;
 let qotdAnswered = false;
 
@@ -293,6 +305,7 @@ function renderTestHome(data) {
 }
 
 async function openTest(id, full = false) {
+  track('test_start');
   try {
     const d = await api(`/api/tests/${id}${full ? '?full=1' : ''}`);
     currentTest = d;
@@ -779,10 +792,66 @@ async function loadAdminDashboard(key) {
     show('#view-admin');
     loadAdminPayments(key);
     loadAdminExamRequests(key);
+    loadAdminAnalytics(key);
   } catch (err) {
     $('#adminGateError').textContent = err.message;
     $('#adminGateError').classList.remove('hidden');
   }
+}
+
+async function loadAdminAnalytics(key) {
+  try {
+    const res = await fetch('/api/admin/analytics', { headers: { 'x-admin-key': key } });
+    if (!res.ok) return;
+    const d = await res.json();
+    const fmtDate = (s) => new Date(s + 'T00:00:00').toLocaleDateString('tl-PH', { month: 'short', day: 'numeric' });
+    const today = d.today;
+
+    // Top-kay bar chart (CSS) ng huling araw na may data
+    const last7 = d.days.slice(-7);
+    const maxViews = Math.max(1, ...last7.map((x) => x.views));
+    const barsHtml = last7.map((x) => `
+      <div class="analytics-bar-row">
+        <span class="analytics-bar-date">${fmtDate(x.date)}</span>
+        <div class="analytics-bar-track">
+          <div class="analytics-bar" style="width:${Math.round((x.views / maxViews) * 100)}%"></div>
+        </div>
+        <span class="analytics-bar-val">${x.views} bisita</span>
+      </div>
+    `).join('');
+
+    $('#adminAnalyticsTotals').innerHTML = `
+      <div class="analytics-stat-card" style="grid-column:1/-1">
+        <strong>Ngayon:</strong> ${today.views} bisita · ${today.unique} unique visitor · ${today.testStarts} test na sinimulan · ${today.signups} sign-up · ${today.attempts} subok
+      </div>
+      <div class="analytics-stat-card"><strong>Kabuuang users:</strong> ${d.totals.users}</div>
+      <div class="analytics-stat-card"><strong>Subscriber:</strong> ${d.totals.subscribed}</div>
+      <div class="analytics-stat-card"><strong>Kabuuang subok:</strong> ${d.totals.totalAttempts}</div>
+      <div class="analytics-stat-card"><strong>Bayad:</strong> ${d.totals.payments} (₱${d.totals.revenue})</div>
+      <div class="analytics-chart">${barsHtml}</div>
+    `;
+
+    $('#adminAnalyticsBody').innerHTML = d.days.slice().reverse().map((x) => `
+      <tr>
+        <td class="date-cell">${fmtDate(x.date)}</td>
+        <td>${x.views}</td>
+        <td>${x.unique}</td>
+        <td>${x.signups}</td>
+        <td>${x.attempts}</td>
+        <td>${x.payments}</td>
+      </tr>
+    `).join('');
+
+    const refList = d.referrers.length
+      ? `<h4 class="analytics-ref-title">Referrers (saan galing ang bisita)</h4>` + d.referrers.slice(0, 8).map((r) => `
+          <div class="history-row" style="max-width:480px">
+            <div class="history-info"><strong>${r.host}</strong></div>
+            <div class="history-score" style="min-width:40px">${r.count}</div>
+          </div>
+        `).join('')
+      : '<p class="note">Wala pang referrer na nairecord. Mag-share ng link sa FB para makita mo kung saan galing ang bisita.</p>';
+    $('#adminAnalyticsReferrers').innerHTML = refList;
+  } catch (e) { /* huwag i-block ang dashboard */ }
 }
 
 async function loadAdminPayments(key) {

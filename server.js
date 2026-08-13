@@ -295,6 +295,105 @@ app.get('/api/question-of-the-day', async (req, res) => {
   });
 });
 
+// ===================== Analytics =====================
+// In-memory tracker: page views, unique visitors, at mga referrer bawat araw.
+// Ang bilang ng users/tests/payments ay kinukuha mula sa DB (persistent).
+const analytics = new Map(); // dayKey -> { views, unique:Set, referrers:Map }
+
+function analyticsDayKey(d = new Date()) {
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function analyticsFor(dayKey) {
+  if (!analytics.has(dayKey)) {
+    analytics.set(dayKey, { views: 0, unique: new Set(), referrers: new Map() });
+  }
+  return analytics.get(dayKey);
+}
+
+// Client beacon — walang auth, magaan. Hinuhugot ang referrer mula sa Referer header
+// at ang visitor key mula sa IP + User-Agent pagkatapos i-hash (hindi iniimbak ang huwad na datos).
+app.post('/api/track', (req, res) => {
+  const now = new Date();
+  const day = analyticsDayKey(now);
+  const rec = analyticsFor(day);
+  rec.views += 1;
+  const ua = req.get('user-agent') || '';
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+  const visitorKey = createHash('sha256').update(`${ip}|${ua}|${now.getUTCDate()}`).digest('hex').slice(0, 16);
+  rec.unique.add(visitorKey);
+  const event = req.body?.event || 'pageview';
+  rec.events = rec.events || {};
+  rec.events[event] = (rec.events[event] || 0) + 1;
+  const referrer = req.get('referer');
+  if (referrer) {
+    let host = 'direct';
+    try { host = new URL(referrer).hostname.replace(/^www\./, ''); } catch { host = 'direct'; }
+    if (host && !host.endsWith('railway.app')) {
+      rec.referrers.set(host, (rec.referrers.get(host) || 0) + 1);
+    }
+  }
+  res.json({ ok: true });
+});
+
+// ADMIN: analytics dashboard — visitors (in-memory, 14 araw) + DB-based signups/attempts/payments
+app.get('/api/admin/analytics', async (req, res) => {
+  if (!await isAdmin(req)) {
+    return res.status(401).json({ error: 'Hindi awtorisado. Maglagay ng admin key.' });
+  }
+  const users = await getAllUsers();
+  const payments = await getAllPayments();
+  const dayKey = analyticsDayKey();
+
+  // 14 na araw na serye (kabilang ang ngayon)
+  const days = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = analyticsDayKey(d);
+    const rec = analytics.get(key);
+    const dayPrefix = key; // "YYYY-M-D" patungo sa createdAt prefixes (ISO: "YYYY-MM-DDTHH:...")
+    const signups = users.filter((u) => u.createdAt && u.createdAt.slice(0, 10) === key && !u.isAdmin).length;
+    const attempts = users.reduce((s, u) => s + (u.history || []).filter((h) => h.at && h.at.slice(0, 10) === key).length, 0);
+    const newPayments = payments.filter((p) => p.createdAt && p.createdAt.slice(0, 10) === key && p.status === 'pending').length;
+    days.push({
+      date: key,
+      views: rec?.views || 0,
+      unique: rec?.unique.size || 0,
+      signups,
+      attempts,
+      payments: newPayments,
+      testStarts: rec?.events?.test_start || 0,
+    });
+  }
+
+  // Referrer aggregation (14 araw)
+  const referrers = [];
+  const refMap = new Map();
+  for (const [k, rec] of analytics) {
+    if (!k.startsWith(dayKey.slice(0, 10).split('-')[0])) continue;
+    for (const [host, count] of rec.referrers) refMap.set(host, (refMap.get(host) || 0) + count);
+  }
+  for (const [host, count] of refMap) referrers.push({ host, count });
+  referrers.sort((a, b) => b.count - a.count);
+
+  const subscribed = users.filter((u) => u.activeSubscription).length;
+  const totalAttempts = users.reduce((s, u) => s + u.attempts, 0);
+
+  res.json({
+    today: days[days.length - 1],
+    days,
+    referrers,
+    totals: {
+      users: users.filter((u) => !u.isAdmin).length,
+      subscribed,
+      totalAttempts,
+      payments: payments.filter((p) => p.status === 'approved').length,
+      revenue: payments.filter((p) => p.status === 'approved').reduce((s, p) => s + (p.amount || 300), 0),
+    },
+  });
+});
+
 app.post('/api/tests/:id/score', async (req, res) => {
   const user = await currentUser(req);
   if (!user) {

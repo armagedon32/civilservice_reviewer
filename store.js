@@ -299,6 +299,7 @@ const PG = {
         best: history.length ? Math.max(...history.map((hh) => hh.score)) : 0,
         avg: history.length ? Math.round(history.reduce((s, hh) => s + hh.score, 0) / history.length) : 0,
         lastScore: history.length ? history[history.length - 1].score : null,
+        history,
       };
     });
   },
@@ -478,11 +479,12 @@ const FILE = {
       subscribedAt: u.subscribedAt,
       expiresAt: u.expiresAt,
       activeSubscription: isSubscribed(u),
-      createdAt: u.createdAt,
+createdAt: u.createdAt,
       attempts: u.history.length,
       best: u.history.length ? Math.max(...u.history.map((h) => h.score)) : 0,
-      avg: u.history.length ? Math.round(u.history.reduce((s, h) => s + h.score, 0) / u.history.length) : 0,
+      avg: u.history.length ? Math.round(u.history.reduce((s, hh) => s + hh.score, 0) / u.history.length) : 0,
       lastScore: u.history.length ? u.history[u.history.length - 1].score : null,
+      history: u.history,
     }));
   },
   async createPayment(userId, reference, note) {
