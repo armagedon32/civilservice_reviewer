@@ -267,6 +267,34 @@ app.get('/api/tests/:id', async (req, res) => {
   });
 });
 
+// Tanong ng Araw (Question of the Day) — pareho para sa lahat kada araw.
+// Deterministic: batay sa kasalukuyang petsa, kaya hindi nagbabago sa bawat request.
+app.get('/api/question-of-the-day', async (req, res) => {
+  const all = [];
+  for (const t of tests) {
+    for (const q of t.bank) all.push({ ...q, testTitle: t.title });
+  }
+  if (!all.length) return res.json({ question: null });
+  const now = new Date();
+  const dayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  let hash = 0;
+  for (const ch of dayKey) hash = (hash * 31 + ch.charCodeAt(0)) % 100000;
+  const q = all[hash % all.length];
+  res.json({
+    date: dayKey,
+    question: {
+      q: q.q,
+      options: q.options,
+      answer: q.answer,
+      topic: q.topic || null,
+      explanation: q.explanation || null,
+      figure: q.figure || null,
+      image: q.image || null,
+      testTitle: q.testTitle,
+    },
+  });
+});
+
 app.post('/api/tests/:id/score', async (req, res) => {
   const user = await currentUser(req);
   if (!user) {

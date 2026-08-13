@@ -185,11 +185,56 @@ $('#examTypeSendBtn').addEventListener('click', async () => {
 async function loadTests() {
   clearTimer();
   try {
-    const data = await api('/api/tests');
+    const [data] = await Promise.all([api('/api/tests'), loadQotd()]);
     renderTestHome(data);
   } catch (err) {
     toast(err.message, 'error');
   }
+}
+
+let qotd = null;
+let qotdAnswered = false;
+
+async function loadQotd() {
+  try {
+    qotd = (await api('/api/question-of-the-day')).question;
+    if (!qotd) return;
+    const box = $('#qotdBox');
+    box.classList.remove('hidden');
+    $('#qotdDate').textContent = new Date().toLocaleDateString('tl-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    $('#qotdQuestion').textContent = qotd.q;
+    const figHtml = (qotd.image || qotd.figure)
+      ? `${qotd.image ? `<div class="figure img"><img src="${qotd.image}" alt="Pigura para sa Tanong ng Araw" loading="lazy"></div>` : `<div class="figure"><pre>${qotd.figure}</pre></div>`}`
+      : '';
+    $('#qotdOptions').innerHTML = figHtml + qotd.options.map((opt, oi) =>
+      `<label class="option" onclick="answerQotd(${oi})"><span></span>${String.fromCharCode(65 + oi)}) ${opt}</label>`
+    ).join('');
+    $('#qotdResult').classList.add('hidden');
+    $('#qotdShareBtn').classList.add('hidden');
+    qotdAnswered = false;
+  } catch (e) { /* huwag i-block ang home page */ }
+}
+
+function answerQotd(oIndex) {
+  if (qotdAnswered || !qotd) return;
+  qotdAnswered = true;
+  const opts = document.querySelectorAll('#qotdOptions .option');
+  opts.forEach((el, oi) => {
+    el.classList.add(oi === qotd.answer ? 'correct-mark' : 'wrong-mark');
+    if (oi === qotd.answer) el.classList.add('selected');
+    el.removeAttribute('onclick');
+    el.style.cursor = 'default';
+  });
+  const correct = oIndex === qotd.answer;
+  $('#qotdResult').innerHTML = `
+    <div class="qotd-answer ${correct ? 'qotd-correct' : 'qotd-wrong'}">
+      ${correct ? '✅ Tama ka!' : `❌ Mali. Ang tamang sagot ay ${String.fromCharCode(65 + qotd.answer)} — ${qotd.options[qotd.answer]}.`}
+    </div>
+    ${qotd.explanation ? `<div class="explanation"><span class="expl-icon">💡</span> <strong>Paliwanag:</strong> ${qotd.explanation}</div>` : ''}
+    ${qotd.testTitle ? `<div class="qotd-source">Mula sa: ${qotd.testTitle}</div>` : ''}
+  `;
+  $('#qotdResult').classList.remove('hidden');
+  $('#qotdShareBtn').classList.remove('hidden');
 }
 
 function renderTestHome(data) {
@@ -452,6 +497,21 @@ function shareScore(score, correct, total, passed) {
       .catch(() => toast('Hindi ma-copy. I-share mo nang manu-mano ang link.', 'info'));
   }
 }
+
+function shareQotd() {
+  if (!qotd) return;
+  const letter = String.fromCharCode(65 + qotd.answer);
+  const text = `📅 Tanong ng Araw — Civil Service Exam\n\n${qotd.q}\n\nA. ${qotd.options[0]}\nB. ${qotd.options[1]}${qotd.options[2] ? `\nC. ${qotd.options[2]}` : ''}${qotd.options[3] ? `\nD. ${qotd.options[3]}` : ''}\n\n✅ Tamang sagot: ${letter}\n\nSubukan mo rin ang libreng practice tests sa Mastery Review PH:\nhttps://civilservicereviewer-production.up.railway.app/`;
+  if (navigator.share) {
+    navigator.share({ title: 'Mastery Review PH — Tanong ng Araw', text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text)
+      .then(() => toast('Na-copy ang Tanong ng Araw! I-paste mo sa FB. 📋', 'success'))
+      .catch(() => toast('Hindi ma-copy. I-share mo nang manu-mano.', 'info'));
+  }
+}
+
+$('#qotdShareBtn')?.addEventListener('click', shareQotd);
 
 function openSubscribe() {
   if (!currentUser) {

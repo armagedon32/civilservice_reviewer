@@ -343,6 +343,117 @@ main {
   margin: 16px 0 6px;
 }
 
+/* Question of the Day */
+.qotd-card {
+  background: linear-gradient(135deg, #2b5cb8 0%, #234a96 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+
+.qotd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.qotd-badge {
+  background: var(--accent);
+  color: #1f2733;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+.qotd-date {
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+.qotd-question {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
+.qotd-card .option-list { display: flex; flex-direction: column; gap: 8px; }
+
+.qotd-card .figure {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.qotd-card .figure img { max-width: 100%; max-height: 220px; }
+
+.qotd-card .figure pre {
+  color: #1f2733;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.9rem;
+  white-space: pre;
+}
+
+.qotd-card .option {
+  display: block;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 0.93rem;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.qotd-card .option:hover { background: rgba(255, 255, 255, 0.22); }
+
+.qotd-card .option.selected { border-color: #fff; }
+
+.qotd-card .option.correct-mark { background: rgba(46, 160, 67, 0.55); border-color: #2ea043; color: #fff; }
+
+.qotd-card .option.wrong-mark { background: rgba(176, 58, 58, 0.5); border-color: #b03a3a; color: #fff; }
+
+.qotd-result { margin-top: 14px; }
+
+.qotd-answer {
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.qotd-answer.qotd-correct { background: rgba(46, 160, 67, 0.35); border: 1px solid #2ea043; }
+.qotd-answer.qotd-wrong { background: rgba(176, 58, 58, 0.35); border: 1px solid #b03a3a; }
+
+.qotd-card .explanation {
+  background: rgba(255, 255, 255, 0.12);
+  border: none;
+  color: #fff;
+}
+
+.qotd-source {
+  margin-top: 10px;
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+.qotd-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
 /* Quiz */
 #testTitle { margin: 12px 0 18px; font-size: 1.4rem; }
 #quizArea { margin-top: 4px; }
