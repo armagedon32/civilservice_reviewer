@@ -1,5 +1,67 @@
 const $ = (sel) => document.querySelector(sel);
 
+// ===== Toast notifications =====
+function toast(message, type = 'info', duration = 4000) {
+  const container = $('#toastContainer') || (() => {
+    const el = document.createElement('div');
+    el.className = 'toast-container';
+    el.id = 'toastContainer';
+    document.body.appendChild(el);
+    return el;
+  })();
+  const icons = { success: '✅', error: '⚠️', warning: '⚠️', info: 'ℹ️' };
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `
+    <span class="toast-icon">${icons[type] || 'ℹ️'}</span>
+    <span class="toast-message"></span>
+    <button class="toast-close" aria-label="Isara">&times;</button>
+  `;
+  t.querySelector('.toast-message').textContent = message;
+  const close = () => {
+    if (t.classList.contains('toast-leaving')) return;
+    t.classList.add('toast-leaving');
+    setTimeout(() => t.remove(), 250);
+  };
+  t.querySelector('.toast-close').addEventListener('click', close);
+  const auto = setTimeout(close, duration);
+  // I-pause ang auto-dismiss kapag naka-hover
+  t.addEventListener('mouseenter', () => clearTimeout(auto));
+  container.appendChild(t);
+  return t;
+}
+
+// ===== Styled confirm dialog (replaces confirm()) =====
+function confirmDialog(message, { title = 'Kumpirmahin', icon = '❓', confirmText = 'Oo', cancelText = 'Kanselahin', danger = false } = {}) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal-box" role="dialog" aria-modal="true">
+        <div class="modal-title"><span>${icon}</span> <span></span></div>
+        <div class="modal-message"></div>
+        <div class="modal-actions">
+          <button class="btn-ghost" data-act="cancel"></button>
+          <button class="btn-primary" data-act="confirm"></button>
+        </div>
+      </div>
+    `;
+    overlay.querySelector('.modal-title span:last-child').textContent = title;
+    overlay.querySelector('.modal-message').textContent = message;
+    const confirmBtn = overlay.querySelector('[data-act="confirm"]');
+    const cancelBtn = overlay.querySelector('[data-act="cancel"]');
+    confirmBtn.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+    if (danger) confirmBtn.style.background = 'var(--danger)';
+    const done = (val) => { overlay.remove(); resolve(val); };
+    confirmBtn.addEventListener('click', () => done(true));
+    cancelBtn.addEventListener('click', () => done(false));
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) done(false); });
+    document.body.appendChild(overlay);
+    confirmBtn.focus();
+  });
+}
+
 let currentUser = null;
 let currentTest = null;
 let currentAnswers = [];
@@ -16,7 +78,11 @@ async function api(url, options = {}) {
     ...options,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'May naganap na error.');
+  if (!res.ok) {
+    const e = new Error(data.error || 'May naganap na error.');
+    Object.assign(e, data);
+    throw e;
+  }
   return data;
 }
 
@@ -122,7 +188,7 @@ async function loadTests() {
     const data = await api('/api/tests');
     renderTestHome(data);
   } catch (err) {
-    alert(err.message);
+    toast(err.message, 'error');
   }
 }
 
@@ -192,22 +258,22 @@ async function openTest(id, full = false) {
     show('#view-test');
   } catch (err) {
     if (err.loginRequired) {
-      if (confirm('Mag-login muna para makapag-practice test. Mag-login/register ka na?')) {
+      if (await confirmDialog('Mag-login muna para makapag-practice test. Mag-login/register ka na?', { title: 'Kailangan mag-login', icon: '🔐', confirmText: 'Mag-login', cancelText: 'Hindi muna' })) {
         authMode = 'login';
         openAuth();
       }
     } else if (err.limitReached) {
-      if (confirm('Naubos mo na ang iyong libreng practice test. Mag-subscribe para magpatuloy?')) {
+      if (await confirmDialog('Naubos mo na ang iyong libreng practice test. Mag-subscribe para magpatuloy?', { title: 'Limitadong subok', icon: '⏳', confirmText: 'Mag-subscribe', cancelText: 'Hindi muna' })) {
         openSubscribe();
       }
     } else if (err.premium) {
-      if (confirm('Ito ay para sa mga subscriber. Mag-subscribe ka na?')) {
+      if (await confirmDialog('Ito ay para sa mga subscriber. Mag-subscribe ka na?', { title: 'Premium test', icon: '👑', confirmText: 'Mag-subscribe', cancelText: 'Hindi muna' })) {
         openSubscribe();
       }
     } else if (err.examTypeMismatch) {
-      alert(err.message);
+      toast(err.message, 'warning');
     } else {
-      alert(err.message);
+      toast(err.message, 'error');
     }
   }
 }
@@ -286,7 +352,7 @@ function startTimerIfNeeded() {
     if (remaining <= 60) countEl.classList.add('timer-low');
     if (remaining <= 0) {
       clearTimer();
-      alert('⏱ Naubos na ang oras. Awtomatikong isinumite ang iyong mga sagot.');
+      toast('Naubos na ang oras. Awtomatikong isinumite ang iyong mga sagot.', 'warning', 6000);
       submitAnswers(true);
     }
   }, 500);
@@ -302,7 +368,12 @@ function selectOption(qIndex, oIndex) {
 async function submitAnswers(autoSubmit = false) {
   clearTimer();
   const unanswered = currentAnswers.filter((a) => a === undefined).length;
-  if (!autoSubmit && unanswered > 0 && !confirm(`May ${unanswered} tanong na hindi pa nasagot. I-submit pa rin?`)) return;
+  if (!autoSubmit && unanswered > 0) {
+    const proceed = await confirmDialog(`May ${unanswered} tanong na hindi pa nasagot. I-submit pa rin?`, {
+      title: 'Hindi pa kumpleto', icon: '📝', confirmText: 'Isumite pa rin', cancelText: 'Bumalik', danger: true,
+    });
+    if (!proceed) return;
+  }
   try {
     const r = await api(`/api/tests/${currentTest.id}/score`, {
       method: 'POST',
@@ -311,10 +382,10 @@ async function submitAnswers(autoSubmit = false) {
     showResult(r, autoSubmit);
   } catch (err) {
     if (err.timeExpired) {
-      alert(err.message);
+      toast(err.message, 'warning');
       loadTests();
     } else {
-      alert(err.message);
+      toast(err.message, 'error');
     }
   }
 }
@@ -426,7 +497,7 @@ async function loadMyPayments() {
       : '<p>Wala kang nai-submit na pagbabayad.</p>';
     show('#view-mypayments');
   } catch (err) {
-    alert(err.message);
+    toast(err.message, 'error');
   }
 }
 
@@ -490,7 +561,7 @@ $('#loginBtn').addEventListener('click', () => { authMode = 'login'; openAuth();
 
 async function loadProgress() {
   if (!currentUser) {
-    alert('Mag-login muna para makita ang iyong progress.');
+    toast('Mag-login muna para makita ang iyong progress.', 'info');
     return;
   }
   try {
@@ -564,7 +635,7 @@ async function loadProgress() {
     }
     show('#view-progress');
   } catch (err) {
-    alert(err.message);
+    toast(err.message, 'error');
   }
 }
 
@@ -674,8 +745,8 @@ async function loadAdminPayments(key) {
 async function approvePayment(id, key) {
   const res = await fetch(`/api/admin/payments/${id}/approve`, { method: 'POST', headers: { 'x-admin-key': key } });
   const d = await res.json();
-  if (!res.ok) { alert(d.error || 'May error.'); return; }
-  alert(d.message);
+  if (!res.ok) { toast(d.error || 'May error.', 'error'); return; }
+  toast(d.message, 'success');
   loadAdminDashboard(key);
   refreshUser();
 }
@@ -683,8 +754,8 @@ async function approvePayment(id, key) {
 async function denyPayment(id, key) {
   const res = await fetch(`/api/admin/payments/${id}/deny`, { method: 'POST', headers: { 'x-admin-key': key } });
   const d = await res.json();
-  if (!res.ok) { alert(d.error || 'May error.'); return; }
-  alert(d.message);
+  if (!res.ok) { toast(d.error || 'May error.', 'error'); return; }
+  toast(d.message, 'success');
   loadAdminDashboard(key);
 }
 
@@ -714,8 +785,8 @@ async function loadAdminExamRequests(key) {
 async function approveExamType(userId, key) {
   const res = await fetch(`/api/admin/exam-type-requests/${userId}/approve`, { method: 'POST', headers: { 'x-admin-key': key } });
   const d = await res.json();
-  if (!res.ok) { alert(d.error || 'May error.'); return; }
-  alert(d.message);
+  if (!res.ok) { toast(d.error || 'May error.', 'error'); return; }
+  toast(d.message, 'success');
   loadAdminDashboard(key);
   refreshUser();
 }
@@ -723,8 +794,8 @@ async function approveExamType(userId, key) {
 async function denyExamType(userId, key) {
   const res = await fetch(`/api/admin/exam-type-requests/${userId}/deny`, { method: 'POST', headers: { 'x-admin-key': key } });
   const d = await res.json();
-  if (!res.ok) { alert(d.error || 'May error.'); return; }
-  alert(d.message);
+  if (!res.ok) { toast(d.error || 'May error.', 'error'); return; }
+  toast(d.message, 'success');
   loadAdminDashboard(key);
 }
 
