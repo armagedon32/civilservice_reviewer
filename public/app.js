@@ -433,9 +433,24 @@ function showResult(r, autoSubmit = false) {
     <div class="score ${r.passed ? 'check' : 'fail'}">${r.score}%</div>
     ${r.timeUp ? '<div class="timeup-note">⏱ Naubos ang oras noong isumite ang mga sagot.</div>' : ''}
     <p>${r.correct} sa ${r.total} ang tamang sagot. ${r.passed ? 'PAGPASADO ka! Mahusay.' : 'Subukan ulit. Target: 70%.'}</p>
+    <div class="share-actions">
+      <button class="btn-share" onclick="shareScore(${r.score}, ${r.correct}, ${r.total}, ${r.passed ? 'true' : 'false'})">📤 I-share ang score</button>
+    </div>
     <div class="review-container">${reviewHtml}</div>
   `;
   show('#view-result');
+}
+
+function shareScore(score, correct, total, passed) {
+  const passedText = passed ? 'PAGPASADO ako sa target na 70%! 🎉' : 'May pag-asa pa, magpapatuloy ako! 💪';
+  const text = `Kumuha ako ng ${score}% (${correct}/${total} tamang sagot) sa Civil Service Exam practice test. ${passedText} Subukan mo rin sa Mastery Review PH — may libreng practice tests at timed Full Mock Exam!\n\nhttps://civilservicereviewer-production.up.railway.app/`;
+  if (navigator.share) {
+    navigator.share({ title: 'Mastery Review PH — CSE Reviewer', text }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text)
+      .then(() => toast('Na-copy ang score mo! I-paste mo sa FB/Messenger. 📋', 'success'))
+      .catch(() => toast('Hindi ma-copy. I-share mo nang manu-mano ang link.', 'info'));
+  }
 }
 
 function openSubscribe() {
